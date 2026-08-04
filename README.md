@@ -8,11 +8,12 @@ Variant B of the A/B test: https://ufonaft12.github.io/examlanding/?variant=B
 
 ```
 config.json   all copy, offers, odds, teams, A/B headlines    2.3 KB
-index.html    semantic, accessible document                   7.5 KB
-style.css     dark iGaming theme + keyframes                 18.3 KB
+index.html    document + inlined stylesheet                  26.2 KB   (7.2 KB gzipped)
 script.js     LandingApp class: state, A/B, interactions     16.8 KB
                                         total ≈ 45 KB raw · ~13 KB gzipped
 ```
+
+The stylesheet lives inside `index.html`. That is deliberate, not sloppiness — see [Performance notes](#performance-notes); it was the page's only render-blocking request. `git log -- style.css` has it as a standalone file if you would rather read it that way.
 
 Run it locally over HTTP (the page fetches `config.json`, so `file://` won't work):
 
@@ -83,7 +84,8 @@ Real Madrid vs Barcelona. Tap a team card or the Draw chip to add a **match-winn
 - **No forced layout on the hot path.** Dragging the slider fires `input` on every pointer move; the payout pop is replayed through the Web Animations API rather than by toggling a class, because the class trick needs an `offsetWidth` read to flush the removal — a synchronous style+layout per frame.
 - **Idle cost:** the vaults' ambient breathing glow is switched off (`animation: none`) the moment a vault is opened, so a page left open after the reveal does no compositor work.
 - **CLS ≈ 0:** the reveal, success and optional calc rows are the only DOM state changes, all below the fold in normal flow; the slider fill is a CSS custom property, not a layout change.
-- **Zero third-party requests, no render-blocking JS.** Four same-origin files, `script.js` deferred. There is intentionally no `<link rel="preload">` for `config.json`: the mandated 1.5s boot gate already overlaps the fetch (`Promise.all`), and the `cache: 'no-store'` freshness policy defeats preload reuse anyway — a preload here would only add a duplicate request and an unused-preload warning.
+- **Nothing blocks the first paint.** The stylesheet is inlined, `script.js` is deferred, and there are no third-party requests, web fonts or icon fonts. A linked stylesheet costs ~150ms of render-blocking on throttled mobile and is the only branch in the critical path; inlined, the whole document is a single 7.2 KB gzipped response, inside the initial congestion window. The trade-off — CSS no longer separately cacheable — costs close to nothing here: this is a one-view landing page for paid traffic where repeat visits are rare, and GitHub Pages pins `Cache-Control` to 10 minutes regardless. At real scale the answer flips: content-hashed filenames behind a CDN with a one-year immutable TTL, and only the above-the-fold rules inlined.
+- **No preload for `config.json`, on purpose.** The mandated 1.5s boot gate already overlaps the fetch (`Promise.all`), and the `cache: 'no-store'` freshness policy defeats preload reuse anyway — a preload here would only add a duplicate request and an unused-preload warning.
 
 **Lighthouse** — measured on the live GitHub Pages URL, Chrome DevTools, mobile emulation with simulated throttling:
 
@@ -97,10 +99,7 @@ Real Madrid vs Barcelona. Tap a team card or the Draw chip to add a **match-winn
 
 The mandated 1.5s gate does **not** cost LCP, which is the interesting part: the loader is itself a contentful paint, so the largest element renders at 0.3s and the simulated latency plays out behind an already-painted screen. Blocking on `Promise.all([fetch, wait(1500)])` rather than chaining the two is what keeps the config fetch inside that window instead of after it.
 
-Two audit hints are left deliberately unactioned:
-
-- **"Use efficient cache lifetimes" (10 KiB).** GitHub Pages serves everything with a fixed 10-minute `Cache-Control` and exposes no way to override it. A real deployment would ship content-hashed filenames behind a CDN with a one-year immutable TTL; that is a hosting property, not a code change.
-- **"Render-blocking requests: style.css".** 5 KiB over the wire, 0 ms of measured blocking. Inlining it would trade a cacheable stylesheet for bytes re-sent on every navigation, and the metric it would improve is already at its ceiling.
+One audit hint is left unactioned, because it is not mine to action: **"Use efficient cache lifetimes."** GitHub Pages serves every asset with a fixed 10-minute `Cache-Control` and exposes no way to override it. That is a property of the host, not of the code — on a real deployment it is one CDN rule.
 
 ---
 
