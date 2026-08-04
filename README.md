@@ -8,9 +8,9 @@ Variant B of the A/B test: https://ufonaft12.github.io/examlanding/?variant=B
 
 ```
 config.json   all copy, offers, odds, teams, A/B headlines    2.3 KB
-index.html    document + inlined stylesheet                  26.2 KB   (7.2 KB gzipped)
+index.html    document + inlined stylesheet                  26.5 KB   (7.3 KB gzipped)
 script.js     LandingApp class: state, A/B, interactions     16.8 KB
-                                        total ≈ 45 KB raw · ~13 KB gzipped
+                                   three files · ~46 KB raw · ~14 KB gzipped
 ```
 
 The stylesheet lives inside `index.html`. That is deliberate, not sloppiness — see [Performance notes](#performance-notes); it was the page's only render-blocking request. `git log -- style.css` has it as a standalone file if you would rather read it that way.
@@ -87,19 +87,25 @@ Real Madrid vs Barcelona. Tap a team card or the Draw chip to add a **match-winn
 - **Nothing blocks the first paint.** The stylesheet is inlined, `script.js` is deferred, and there are no third-party requests, web fonts or icon fonts. A linked stylesheet costs ~150ms of render-blocking on throttled mobile and is the only branch in the critical path; inlined, the whole document is a single 7.2 KB gzipped response, inside the initial congestion window. The trade-off — CSS no longer separately cacheable — costs close to nothing here: this is a one-view landing page for paid traffic where repeat visits are rare, and GitHub Pages pins `Cache-Control` to 10 minutes regardless. At real scale the answer flips: content-hashed filenames behind a CDN with a one-year immutable TTL, and only the above-the-fold rules inlined.
 - **No preload for `config.json`, on purpose.** The mandated 1.5s boot gate already overlaps the fetch (`Promise.all`), and the `cache: 'no-store'` freshness policy defeats preload reuse anyway — a preload here would only add a duplicate request and an unused-preload warning.
 
-**Lighthouse** — measured on the live GitHub Pages URL, Chrome DevTools, mobile emulation with simulated throttling:
+**Lighthouse**, run against the live GitHub Pages URL with mobile emulation and simulated throttling (`lighthouse --form-factor=mobile --screenEmulation.mobile`):
 
 | Performance | Accessibility | Best Practices | SEO |
 | --- | --- | --- | --- |
-| **100** | **100** | **100** | **100** |
+| **99** | **100** | **100** | **100** |
 
 | FCP | LCP | TBT | CLS | Speed Index |
 | --- | --- | --- | --- | --- |
-| 0.3 s | 0.3 s | 0 ms | 0 | 0.6 s |
+| 1.1 s | 1.1 s | 10 ms | **0** | 3.2 s |
 
-The mandated 1.5s gate does **not** cost LCP, which is the interesting part: the loader is itself a contentful paint, so the largest element renders at 0.3s and the simulated latency plays out behind an already-painted screen. Blocking on `Promise.all([fetch, wait(1500)])` rather than chaining the two is what keeps the config fetch inside that window instead of after it.
+Served from a local static server instead — same build, no GitHub Pages TTFB — it is **100 across all four**. On an unthrottled desktop profile FCP and LCP land at 0.3 s.
 
-One audit hint is left unactioned, because it is not mine to action: **"Use efficient cache lifetimes."** GitHub Pages serves every asset with a fixed 10-minute `Cache-Control` and exposes no way to override it. That is a property of the host, not of the code — on a real deployment it is one CDN rule.
+Two things are worth reading off that table.
+
+**The 1.5s gate costs no LCP.** FCP and LCP are the same moment because the loader is itself a contentful paint: the largest element renders as soon as the document does, and the simulated latency plays out behind an already-painted screen. Blocking on `Promise.all([fetch, wait(1500)])` instead of chaining the two is what keeps the config fetch inside that window rather than after it.
+
+**Speed Index is the one metric the gate does cost**, and deliberately so. It measures how quickly the viewport reaches its final state, so a mandated hold at a spinner is exactly what it penalises. Removing it would buy roughly a point of Performance and break the brief; it stays.
+
+The only remaining audit is **"Use efficient cache lifetimes"**, which is not mine to action: GitHub Pages serves every asset with a fixed 10-minute `Cache-Control` and exposes no override. That is a property of the host, not the code — on a real deployment it is one CDN rule.
 
 ---
 
