@@ -7,7 +7,6 @@
 <meta name="description" content="Interactive casino and sportsbook welcome offer — pick a mystery vault or build a match prediction.">
 <meta name="color-scheme" content="dark">
 <title>VAULTBET — Claim Your Welcome Package</title>
-<link rel="preload" href="config.json" as="fetch" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -44,6 +43,7 @@
   <main id="top">
     <section class="hero wrap">
       <p class="hero__badge"><span class="dot" aria-hidden="true"></span> Offer live · <span data-variant-label>Variant A</span></p>
+      <p class="hero__proof" data-social-proof></p>
       <h1 class="hero__title" id="headline">Claim Your Exclusive Welcome Package</h1>
       <p class="hero__sub" id="subline">Two ways to start. Pick a vault or build a prediction.</p>
     </section>
@@ -56,32 +56,7 @@
           <h2 class="card__title" data-casino-title>Pick 1 of 3 Vaults</h2>
           <p class="card__sub" data-casino-sub>One tap. One reward.</p>
 
-          <div class="vaults" id="vaults" role="group" aria-label="Mystery vaults">
-            <button class="vault" type="button" data-index="0" aria-label="Open mystery vault 1">
-              <span class="vault__glow" aria-hidden="true"></span>
-              <span class="vault__body">
-                <span class="vault__lid"><span class="vault__dial" aria-hidden="true"></span></span>
-                <span class="vault__face"><span class="vault__num">1</span></span>
-                <span class="vault__prize" aria-hidden="true"></span>
-              </span>
-            </button>
-            <button class="vault" type="button" data-index="1" aria-label="Open mystery vault 2">
-              <span class="vault__glow" aria-hidden="true"></span>
-              <span class="vault__body">
-                <span class="vault__lid"><span class="vault__dial" aria-hidden="true"></span></span>
-                <span class="vault__face"><span class="vault__num">2</span></span>
-                <span class="vault__prize" aria-hidden="true"></span>
-              </span>
-            </button>
-            <button class="vault" type="button" data-index="2" aria-label="Open mystery vault 3">
-              <span class="vault__glow" aria-hidden="true"></span>
-              <span class="vault__body">
-                <span class="vault__lid"><span class="vault__dial" aria-hidden="true"></span></span>
-                <span class="vault__face"><span class="vault__num">3</span></span>
-                <span class="vault__prize" aria-hidden="true"></span>
-              </span>
-            </button>
-          </div>
+          <div class="vaults" id="vaults" role="group" aria-label="Mystery vaults"></div>
 
           <div class="reveal" id="casinoReveal" hidden aria-live="polite">
             <p class="reveal__label">Your reward</p>
@@ -146,6 +121,7 @@
           <div class="success" id="sportsSuccess" hidden aria-live="polite">
             <span class="success__check" aria-hidden="true"></span>
             <p class="success__title" id="successTitle">Prediction Locked In</p>
+            <p class="success__summary" id="successSummary"></p>
             <p class="success__body" id="successBody"></p>
             <button class="btn btn--green btn--pulse" type="button" id="successCta">Create Account &amp; Bet</button>
           </div>

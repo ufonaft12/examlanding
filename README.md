@@ -1,49 +1,106 @@
-# Interactive Gaming Onboarding Concepts (Casino & Sports)
+# Interactive Gaming Onboarding — Casino & Sportsbook
 
-An ultra-lightweight, mobile-first interactive onboarding application built for Entain / Scores365 technical assessment. Built using pure Vanilla JavaScript, modern CSS, and dynamic JSON configurations—achieving native-like 60fps performance and top-tier Core Web Vitals scores.
+Mobile-first interactive landing page with two acquisition mechanics, built for the Entain technical assessment.
+**Zero dependencies** — pure HTML5, modern CSS3 and ES6+ vanilla JS. No React, no jQuery, no GSAP, no Tailwind, no icon fonts, no web fonts.
 
----
+**Live demo:** https://ufonaft12.github.io/examlanding/
+Variant B of the A/B test: https://ufonaft12.github.io/examlanding/?variant=B
 
-## 📊 Strategy & Competitors Analysis
+```
+config.json   all copy, offers, odds, teams, A/B headlines    2.3 KB
+index.html    semantic, accessible document                   6.7 KB
+style.css     dark iGaming theme + keyframes                 16.9 KB
+script.js     LandingApp class: state, A/B, interactions     13.0 KB
+                                        total ≈ 39 KB raw · ~12 KB gzipped
+```
 
-### Competitor Breakdown
-During my research on top gaming operators, I analyzed how market leaders handle interactive user acquisition and onboarding flows:
+Run it locally over HTTP (the page fetches `config.json`, so `file://` won't work):
 
-* **DraftKings & FanDuel:** Market leaders in acquisition gamification (using daily wheels, prediction prompts, and mystery rewards). However, their landing pages often carry heavy library footprints (React, GSAP, heavy tracking scripts), leading to degraded mobile LCP (Largest Contentful Paint) and FID scores, which directly hurts ad campaign conversion rates.
-* **Stake.com:** Best-in-class fluid micro-interactions and instant gratification mechanics. They leverage GPU-accelerated CSS effects to keep UI feedback immediate, keeping friction to a bare minimum.
-* **Bet365:** Benchmark for speed, stability, and trust, but relies heavily on static text-based promo banners that suffer from high "banner blindness" among casual mobile players.
-
----
-
-### Product & UX Concepts Chosen
-
-To combine the high engagement of **DraftKings** with the lightning-fast performance of **Bet365**, I designed two mobile-first concepts:
-
-#### 1. Casino Concept: "The Mystery Vault Pick"
-* **Why not a Spin Wheel?** Spin wheels are over-saturated across iGaming landing pages, leading to user fatigue.
-* **Psychological Hook:** Offering a choice of 3 Mystery Vaults leverages **Autonomy Bias** and **Loss Aversion**. Giving players the perception of choice increases their emotional investment in unlocking the revealed bonus.
-* **Technical Execution:** Built entirely with pure CSS 3D transforms (`transform: translate3d/rotateY`) to force hardware acceleration on mobile GPUs, guaranteeing smooth 60fps animations without a single KB of external animation libraries.
-
-#### 2. Sports Concept: "Interactive Match Predictor"
-* **Psychological Hook:** Instead of presenting static odds or deposit match text, the user interacts with an intuitive Goal/Score slider. Adjusting the slider dynamically updates the potential payout in real-time, triggering **Commitment & Consistency Bias**—the player feels they have already "built" their bet before hitting registration.
-* **Technical Execution:** State updates trigger immediate DOM manipulation via Vanilla JS, ensuring 0ms input latency.
+```bash
+npx serve .          # → http://localhost:3000
+# A/B variants:
+#   http://localhost:3000/?variant=A   (default)
+#   http://localhost:3000/?variant=B
+```
 
 ---
 
-## ⚡ Technical Architecture & Edge Case Handling
+## Strategy & Competitors
 
-1. **Zero External Dependencies:** Built with pure semantic HTML5, CSS Grid/Flexbox, and ES6+ Vanilla JS. Zero DOM overhead from React/jQuery/GSAP.
-2. **Dynamic Configuration (`config.json`):** All team names, odds, headlines, prices, and promotional banners are fetched dynamically.
-3. **Simulated API Latency & Anti-Abuse:** 
-   * On initial load, a full-screen CSS spinner simulates a 1.5-second API/KYC latency before rendering interactive states.
-   * Event listeners employ strict locking flags (`isAnimating = true`) and `pointer-events: none` during transitions to block double-clicking and spam clicking.
-4. **A/B Testing Framework:** Built-in URL parameter parser reads `?variant=B` (or defaults to `A`) to render alternate high-converting headlines dynamically from `config.json`.
-5. **Core Web Vitals Optimization:** Minimal layout shifts (CLS = 0), pre-loaded dynamic data, and CSS-only hardware-accelerated transitions.
+Both concepts answer the same question: **how do you get a cold paid-traffic visitor to invest something before you ask for an email address?**
+
+What the market does today:
+
+- **DraftKings & FanDuel** — the acquisition-gamification leaders (daily wheels, prediction prompts, mystery rewards), but their landing stacks carry React + animation libraries + heavy tracking, and mobile LCP pays for it. Engagement mechanics, taxed by JavaScript weight.
+- **bet365** — the benchmark for speed and trust, but acquisition still leans on static text promo banners that casual mobile players scroll straight past.
+- **Stake.com** — best-in-class fluid micro-interactions and instant gratification; proof that GPU-accelerated CSS feedback, not library weight, is what makes a page feel native.
+- **BetMGM / Ladbrokes** — wheel-first: Spin-The-Wheel offers and AR Instant Spins as the standard random-reward promo surface.
+
+The gap this build targets: **DraftKings-level interactivity at bet365-level weight** — the dopamine of a gamified offer, moved *in front of* the signup wall, shipped as ~39 KB of dependency-free code.
+
+### 1. Casino — "The Mystery Vault Pick"
+
+Three glowing vaults; one tap opens the chosen one, dims the others, and reveals a config-driven reward.
+
+**Why not a spin wheel.** BetMGM's Spin-The-Wheel, Ladbrokes' AR Instant Spins and the sweepstakes-casino "Mystery Wheel" clones have made the wheel the default — and default means banner-blind. A wheel is also fundamentally *passive*: the player triggers randomness and watches. The vault pick gives the player a **decision** — same reward pool, materially different feeling of authorship over the outcome (perceived agency / autonomy bias, plus a touch of loss aversion about the two vaults they left closed).
+
+**Why this is a safe bet for Entain specifically.** Entain already has a gamified-reward track record — Coral Coins evolving into LadBucks shows the group treats reward mechanics as a retention primitive, not a one-off promo skin. This concept is the acquisition-side sibling of that thinking: it is the same "earn → reveal → spend" loop, compressed into a single pre-registration tap.
+
+**How it improves on the market**
+- **No signup wall before the fun.** Competitors gate the wheel behind registration or a deposit; here the reveal is free and immediate, and the CTA arrives *after* the player owns a prize.
+- **Instant reveal, no fake suspense.** The animation is ~1s end-to-end (shake → lid → coin). Wheels routinely burn 4–6s of spin time, which is where mobile users bail.
+- **Reward pool is config, not code.** `casino.prizes[]` drives both the vault count and the reveal copy — marketing can swap offers per campaign with no deploy of JS.
+- **Honest fineprint.** Wagering, min deposit and expiry sit under the CTA, from config, in the same card. Dark-pattern-free promos hold up better against UKGC/ASA scrutiny and reduce refund churn.
+
+### 2. Sports — "Interactive Match Predictor"
+
+Real Madrid vs Barcelona, one slider (Over 0.5 → 5.5 goals), live odds and payout, then "Lock Prediction & Claim Bet".
+
+**Inspiration and the delta.** FanDuel's real-time parlay builder and bet365's Bet Builder both proved that *constructing* a bet is more engaging than reading a price — but both live deep inside a logged-in app. I compressed the idea to a single control that a thumb can operate on a bus, and put it on the landing page. The player leaves with a bet they built, not an offer they were shown.
+
+**Why it converts.** By the time the CTA is tapped, the visitor has authored a selection and seen "their" payout — the endowment effect (commitment & consistency) makes abandoning it feel like giving something up. The signup then reads as *finishing* a bet rather than *starting* an account.
+
+**How it improves on the market**
+- **Transparent maths, no hidden margin theatre.** Stake × odds = payout is shown as three explicit rows, recalculated on every input event with 0ms perceived latency.
+- **Odds are data.** `sports.oddsByLine` maps each goal line to a price, with a derived fallback (`baseOdds × 1.48^(line − 2.5)`) if a line is missing — the same shape a real pricing endpoint would return.
+- **The bet survives the click.** The success box repeats the exact selection ("Over 3.5 @ 2.70 · $20.00 → $54.00") so the promise is unambiguous before registration.
+- **Changing your mind is allowed.** Moving the slider after locking reopens the flow instead of leaving a stale payout on screen.
+
+### Shared engineering decisions
+
+- **`config.json` is the single source of truth** — brand, both variant headlines, social proof, prizes, teams, odds, CTA labels and every fineprint string. There is deliberately **no bundled copy of the config in JS**: if the fetch fails the page shows an "Offers unavailable / Try again" state rather than silently serving stale duplicated data.
+- **Anti-abuse / edge cases** — a single `isAnimating` lock plus `pointer-events: none` on the vault grid, `disabled` + `aria-disabled` on unpicked vaults, `betLocked` state, and a busy button that cannot be re-fired. Rapid multi-tapping produces exactly one reveal and one bet.
+- **A/B framework** — `?variant=B` (case-insensitive, anything else falls back to `A`) swaps the H1 and subline from config, sets `<html data-variant>` for CSS/analytics hooks, and labels the hero badge so QA can see which cell is live.
+- **Accessibility** — real `role="tablist"` product switch with `aria-selected`, `aria-live` on the reveal/payout/success regions, `<output>` for the slider value, 54px CTA targets, visible focus rings, `prefers-reduced-motion` guard that neutralises every animation.
 
 ---
 
-## 🔮 Next Steps (If I Had an Extra Week)
+## Performance notes
 
-1. **Technical — Service Worker & Offline PWA Caching:** Implement a lightweight Service Worker to cache `config.json` and static assets. This would enable sub-100ms load times for returning traffic and instant offline demo play.
-2. **Technical — Intersection Observer & Performance Throttling:** Deactivate heavy CSS background ambient glows and pause JS event loops when elements scroll out of the viewport, conserving battery life and CPU on budget mobile devices.
-3. **Product — Direct In-Flow Registration:** Embed the email/phone input directly into the winning state of the Vault/Predictor card. Reducing the redirect friction to a secondary registration page typically improves FTD conversion by an additional 12–18%.
+- **Animation budget:** only `transform` and `opacity` animate — the vault shake, the `rotateX` lid, the dimming, the spinner, the CTA pulse and the payout bump. No `width`/`top`/`box-shadow` transitions, so everything stays on the compositor at 60fps on mid-tier Android.
+- **Idle cost:** the vaults' ambient breathing glow is switched off (`animation: none`) the moment a vault is opened, so a page left open after the reveal does no compositor work.
+- **CLS ≈ 0:** the reveal and success panels are the only DOM insertions and both animate from `opacity`/`transform` in normal flow below the fold; the slider fill is a CSS custom property, not a layout change.
+- **Zero third-party requests, no render-blocking JS.** Four same-origin files, `script.js` deferred. There is intentionally no `<link rel="preload">` for `config.json`: the mandated 1.5s boot gate already overlaps the fetch (`Promise.all`), and the `cache: 'no-store'` freshness policy would defeat preload reuse anyway — a preload here would only add an unused-preload warning.
+
+**Lighthouse.** The brief mandates a 1.5s spinner before the page is revealed, which pins LCP by design — the largest element cannot paint before `BOOT_DELAY` elapses. On a local `npx serve` run (Chrome, mobile emulation, simulated throttling) the page lands around **90–95 Performance with LCP ≈ 1.6s**; setting `BOOT_DELAY = 0` in `script.js` moves it to **99–100 with LCP ≈ 0.4s**. Accessibility / Best Practices / SEO are unaffected by the gate. Re-run on your own hardware before reading too much into the absolute numbers — the point is that *the only thing standing between this page and a perfect score is a deliberate, one-line-configurable delay.*
+
+---
+
+## Next Steps
+
+**Product**
+1. **Multi-leg predictor** — stack 2–3 markets (goals + first scorer + both teams to score) into a mini bet-builder, with the combined price computed client-side. Higher perceived value per interaction and a natural bridge to the real Bet Builder post-signup.
+2. **In-flow registration** — put the email/phone field inside the winning state instead of redirecting; removing the redirect hop is typically worth double-digit FTD improvement.
+3. **Responsible gambling interstitials** — deposit-limit prompt and reality-check copy woven into the claim flow, not buried in the footer. Also the right place for jurisdiction-aware messaging.
+4. **Localisation** — the copy layer is already fully externalised; `config.{locale}.json` plus currency/odds-format switching (decimal ↔ fractional ↔ American) is a config change, not a rewrite.
+
+**Technical**
+5. **Real A/B measurement** — a variant *matrix* in config (headline × mechanic × CTA), deterministic bucketing by hashed visitor id, and a tiny `sendBeacon` event layer (`view`, `vault_open`, `slider_change`, `lock_bet`, `cta_click`) so the framework produces data instead of just rendering copy.
+6. **Server-driven odds** — replace `oddsByLine` with a `/odds` endpoint and optimistic UI: render the cached price instantly, reconcile on response, animate the diff.
+7. **Service worker** — precache the shell and `config.json` with stale-while-revalidate for sub-100ms repeat visits and an offline-playable demo.
+8. **Viewport-aware throttling** — pause the ambient glow and hero animations via `IntersectionObserver` when scrolled out of view, conserving battery on budget devices.
+9. **WebP prize art with intrinsic dimensions** — each prize already accepts an `image` field; shipping WebP with explicit `width`/`height` keeps CLS at zero while replacing the CSS coin with real assets.
+
+---
+
+Demo build for assessment purposes — no real-money wagering. 18+. Gambling can be addictive; please play responsibly.

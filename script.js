@@ -1,7 +1,4 @@
-/* ============================================================
-   VAULTBET — app controller
-   Vanilla ES6+. No dependencies.
-   ============================================================ */
+/* VAULTBET — app controller. Vanilla ES6+, zero dependencies. */
 'use strict';
 
 const BOOT_DELAY = 1500;   // simulated config/KYC latency (spec: exactly 1.5s)
@@ -9,45 +6,12 @@ const SHAKE_MS   = 420;    // must match .vault.is-shaking keyframes
 const OPEN_MS    = 620;    // lid rotation + prize fade
 const BET_MS     = 800;    // button loading state before success box
 
-/* Offline fallback so the demo never renders empty if config.json is blocked */
-const FALLBACK_CONFIG = {
-  brand: { name: 'VAULTBET', mark: 'VB', tagline: 'Play smart. 18+ only.' },
-  variants: {
-    A: { headline: 'Claim Your Exclusive Welcome Package', subline: 'Two ways to start. Pick a vault or build a prediction.' },
-    B: { headline: 'Unlock Your Instant $500 Bonus Today', subline: "No promo code needed. Your reward applies to your first deposit." }
-  },
-  casino: {
-    eyebrow: 'Casino · Mystery Vault Pick', title: 'Pick 1 of 3 Vaults',
-    subtitle: 'One tap. One reward.', cta: 'CLAIM BONUS NOW', footnote: '',
-    prizes: [
-      { title: '100 Free Spins', detail: '+ $50 Bonus' },
-      { title: '$50 Cash Bonus', detail: 'Instantly credited' },
-      { title: '200% Deposit Match', detail: 'Up to $500' }
-    ]
-  },
-  sports: {
-    eyebrow: 'Sports · Match Predictor', title: 'Build Your First Bet',
-    subtitle: 'Slide to set the goals line.', cta: 'Lock Prediction & Claim Bet', footnote: '',
-    match: {
-      competition: 'La Liga', name: 'El Clásico', kickoff: 'Sat 21:00 CET',
-      market: 'Total Goals — Over',
-      home: { name: 'Real Madrid', short: 'RMA', form: 'W W D W L' },
-      away: { name: 'Barcelona', short: 'BAR', form: 'W W W D W' }
-    },
-    stake: 20, baseOdds: 1.85,
-    oddsByLine: { '0.5': 1.12, '1.5': 1.44, '2.5': 1.85, '3.5': 2.7, '4.5': 4.1, '5.5': 6.5 },
-    success: {
-      title: 'Prediction Locked In',
-      body: 'Your Over {line} goals selection is saved. Finish sign-up and we will match it with a $20 free bet.',
-      cta: 'Create Account & Bet'
-    }
-  }
-};
-
 const wait  = (ms) => new Promise((res) => setTimeout(res, ms));
 const money = (n) => '$' + n.toFixed(2);
+const num   = (n) => Number(n).toLocaleString('en-US');
 const $     = (sel, root = document) => root.querySelector(sel);
 const $$    = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 class LandingApp {
   constructor() {
@@ -70,7 +34,7 @@ class LandingApp {
       tabs:        $$('.switch__btn'),
       views:       $$('.view'),
       vaults:      $('#vaults'),
-      vaultBtns:   $$('.vault'),
+      vaultBtns:   [],
       reveal:      $('#casinoReveal'),
       prizeTitle:  $('#prizeTitle'),
       prizeDetail: $('#prizeDetail'),
@@ -84,6 +48,7 @@ class LandingApp {
       sportsCta:   $('#sportsCta'),
       success:     $('#sportsSuccess'),
       successTitle:$('#successTitle'),
+      successSummary:$('#successSummary'),
       successBody: $('#successBody'),
       successCta:  $('#successCta')
     };
@@ -94,12 +59,27 @@ class LandingApp {
     document.body.classList.add('is-locked');
     this.variant = this.readVariant();
 
-    const [config] = await Promise.all([this.loadConfig(), wait(BOOT_DELAY)]);
-    this.config = config;
+    try {
+      const [config] = await Promise.all([this.loadConfig(), wait(BOOT_DELAY)]);
+      this.config = config;
+    } catch (err) {
+      return this.fail(err);           // single source of truth: no bundled config copy
+    }
 
     this.hydrate();
     this.bind();
     this.reveal();
+  }
+
+  /* config is the only hard dependency — surface the failure instead of faking data */
+  fail(err) {
+    document.body.classList.remove('is-locked');
+    this.el.loader.innerHTML =
+      '<p class="loader__text">Offers unavailable</p>' +
+      '<p class="loader__hint"></p>' +
+      '<button class="btn btn--gold" type="button" data-retry>Try again</button>';
+    $('.loader__hint', this.el.loader).textContent = err.message || String(err);
+    $('[data-retry]', this.el.loader).addEventListener('click', () => location.reload());
   }
 
   readVariant() {
@@ -108,14 +88,9 @@ class LandingApp {
   }
 
   async loadConfig() {
-    try {
-      const res = await fetch('config.json', { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return await res.json();
-    } catch (err) {
-      console.warn('[VAULTBET] config.json unavailable, using fallback:', err.message);
-      return FALLBACK_CONFIG;
-    }
+    const res = await fetch('config.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('config.json — HTTP ' + res.status);
+    return res.json();
   }
 
   reveal() {
@@ -144,12 +119,22 @@ class LandingApp {
     set('[data-variant-label]', 'Variant ' + this.variant);
     document.documentElement.dataset.variant = this.variant;
 
+    /* social proof */
+    const proof = $('[data-social-proof]');
+    const sp = c.social || {};
+    if (proof) {
+      if (sp.count) proof.textContent = num(sp.count) + ' ' + (sp.label || 'players claimed today');
+      else proof.remove();
+    }
+
     /* casino */
     set('[data-casino-eyebrow]', c.casino.eyebrow);
     set('[data-casino-title]',   c.casino.title);
     set('[data-casino-sub]',     c.casino.subtitle);
     set('[data-casino-foot]',    c.casino.footnote);
     this.el.casinoCta.textContent = c.casino.cta;
+
+    this.buildVaults(c.casino.prizes || []);
 
     /* warm the prize art so the reveal never pops in late */
     (c.casino.prizes || []).forEach((p) => { if (p.image) { const i = new Image(); i.src = p.image; } });
@@ -177,6 +162,29 @@ class LandingApp {
     this.updateBet();
   }
 
+  /* one vault per configured prize — count is data-driven, not hard-coded */
+  buildVaults(prizes) {
+    const n = Math.max(2, prizes.length);
+    this.el.vaults.style.setProperty('--cols', n);
+    this.el.vaults.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'vault';
+      btn.dataset.index = i;
+      btn.setAttribute('aria-label', 'Open mystery vault ' + (i + 1));
+      btn.innerHTML =
+        '<span class="vault__glow" aria-hidden="true"></span>' +
+        '<span class="vault__body">' +
+          '<span class="vault__lid"><span class="vault__dial" aria-hidden="true"></span></span>' +
+          '<span class="vault__face"><span class="vault__num">' + (i + 1) + '</span></span>' +
+          '<span class="vault__prize" aria-hidden="true"></span>' +
+        '</span>';
+      this.el.vaults.appendChild(btn);
+    }
+    this.el.vaultBtns = $$('.vault', this.el.vaults);
+  }
+
   /* ============ events ============ */
   bind() {
     this.el.tabs.forEach((tab) => {
@@ -199,7 +207,6 @@ class LandingApp {
         e.preventDefault();
         btn.classList.add('is-busy');
         setTimeout(() => btn.classList.remove('is-busy'), 900);
-        console.log('[VAULTBET] CTA → registration', { variant: this.variant, view: this.view });
       });
     });
   }
@@ -228,7 +235,7 @@ class LandingApp {
     if (this.isAnimating || this.vaultOpened) return;
     this.isAnimating = true;
     this.vaultOpened = true;
-    this.el.vaults.classList.add('is-locked');          // pointer-events: none
+    this.el.vaults.classList.add('is-locked', 'is-opened');   // pointer-events: none + idle glow off
 
     const prizes = this.config.casino.prizes;
     const prize  = prizes[Math.floor(Math.random() * prizes.length)];
@@ -245,11 +252,41 @@ class LandingApp {
     btn.classList.add('is-picked');
 
     await wait(OPEN_MS);
-    this.el.prizeTitle.textContent  = prize.title;
     this.el.prizeDetail.textContent = prize.detail;
     this.el.reveal.hidden = false;
+    this.countUp(this.el.prizeTitle, prize.title);
 
     this.isAnimating = false;                            // reveal complete
+  }
+
+  /* count the leading number of the prize up from zero (compositor-free, text only) */
+  countUp(el, text, ms = 750) {
+    const m = /^(.*?)(\d[\d,]*)(.*)$/.exec(text);
+    if (!m || REDUCED || document.hidden) { el.textContent = text; return; }
+    const pre = m[1], post = m[3];
+    const target = parseInt(m[2].replace(/,/g, ''), 10);
+    const t0 = performance.now();
+
+    /* the animation never owns the final value: guarantee the end state even if
+       rAF is throttled (backgrounded tab, prerender) */
+    const settle = () => {
+      el.textContent = text;
+      clearTimeout(guard);
+      document.removeEventListener('visibilitychange', settle);
+    };
+    const guard = setTimeout(settle, ms + 80);
+    document.addEventListener('visibilitychange', settle);
+
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / ms);
+      if (p < 1) {
+        el.textContent = pre + num(Math.round(target * (1 - Math.pow(1 - p, 3)))) + post;
+        requestAnimationFrame(tick);
+      } else {
+        settle();
+      }
+    };
+    requestAnimationFrame((now) => { el.textContent = pre + '0' + post; tick(now); });
   }
 
   /* prize art: config image when supplied, CSS coin otherwise */
@@ -284,6 +321,8 @@ class LandingApp {
     const stake  = Number(s.stake) || 20;
     const odds   = this.oddsFor(this.line);
     const label  = this.line.toFixed(1);
+    this.odds = odds;
+    this.stake = stake;
 
     /* paint slider fill without layout work */
     const min = parseFloat(this.el.range.min), max = parseFloat(this.el.range.max);
@@ -329,6 +368,9 @@ class LandingApp {
 
     const tpl = this.config.sports.success.body || '';
     this.el.successBody.textContent = tpl.replace('{line}', this.line.toFixed(1));
+    this.el.successSummary.textContent =
+      'Over ' + this.line.toFixed(1) + ' @ ' + this.odds.toFixed(2) +
+      ' · ' + money(this.stake) + ' → ' + money(this.stake * this.odds);
     this.el.success.hidden = false;
 
     this.isAnimating = false;
