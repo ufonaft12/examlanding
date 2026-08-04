@@ -292,8 +292,88 @@ class LandingApp {
     this.el.prizeDetail.textContent = prize.detail;
     this.el.reveal.hidden = false;
     this.countUp(this.el.prizeTitle, prize.title);
+    this.bringIntoView(this.el.reveal);
 
     this.isAnimating = false;                            // reveal complete
+  }
+
+  /* A panel that opens below the fold is a reward the player never sees, and a
+     CTA they have to hunt for. Scroll only when it is genuinely out of view, so
+     nothing jumps on a desktop where it already fits. */
+  bringIntoView(el) {
+    const target = this.scrollTargetFor(el);
+    if (target === null) return;
+    /* revealing a panel changes document height and the browser clamps the
+       scroll position when it does — re-check once the motion has finished */
+    this.scrollWindowTo(target, 420, () => {
+      const corrected = this.scrollTargetFor(el);
+      if (corrected !== null) window.scrollTo(0, corrected);
+    });
+  }
+
+  /* Document-space geometry from offsetTop/offsetHeight rather than
+     getBoundingClientRect: the panels animate in with scaleY, and a rect
+     measured mid-animation would aim the scroll at the wrong place. */
+  scrollTargetFor(el) {
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    let top = 0;
+    for (let n = el; n; n = n.offsetParent) top += n.offsetTop;
+    const height = el.offsetHeight;
+    const y = window.scrollY;
+
+    if (top >= y && top + height <= y + vh) return null;   // already fully visible
+
+    const gap = 16;
+    const header = $('.site-header');
+    const headerH = header ? header.offsetHeight : 0;
+
+    /* normally bring the panel's bottom up — that is where the CTA lives. Only
+       align the top when the panel is above us, or too tall to fit below the
+       sticky header. */
+    const want = (top < y || height + headerH + gap * 2 > vh)
+      ? top - headerH - gap
+      : top + height - vh + gap;
+
+    return Math.max(0, Math.round(want));
+  }
+
+  /* Eased scroll driven by rAF rather than `behavior: 'smooth'`, which is a
+     silent no-op in some engines and WebViews. Aborts the moment the player
+     scrolls themselves — never fight the user for control of the viewport. */
+  scrollWindowTo(top, ms = 420, onEnd) {
+    const from = window.scrollY;
+    const events = ['wheel', 'touchstart', 'keydown'];
+    let finished = false;
+
+    const cleanup = () => {
+      clearTimeout(guard);
+      events.forEach((e) => window.removeEventListener(e, cancel));
+    };
+    /* the player took over — leave the viewport where they put it */
+    const cancel = () => { if (!finished) { finished = true; cleanup(); } };
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      window.scrollTo(0, top);
+      if (onEnd) onEnd();
+    };
+
+    /* the easing never owns the final position: land it even if rAF is starved */
+    const guard = setTimeout(finish, ms + 120);
+    events.forEach((e) => window.addEventListener(e, cancel, { passive: true }));
+
+    if (REDUCED || Math.abs(top - from) < 2) return finish();
+
+    const t0 = performance.now();
+    const step = (now) => {
+      if (finished) return;
+      const p = Math.min(1, (now - t0) / ms);
+      if (p >= 1) return finish();
+      window.scrollTo(0, from + (top - from) * (1 - Math.pow(1 - p, 3)));
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
   /* count the leading number of the prize up from zero (compositor-free, text only) */
@@ -449,8 +529,11 @@ class LandingApp {
       this.betLabel + ' @ ' + this.odds.toFixed(2) +
       ' · ' + money(this.stake) + ' → ' + money(this.stake * this.odds);
     this.el.success.hidden = false;
-    /* disabling the CTA drops focus to <body>; hand it to the next step instead */
+    /* disabling the CTA drops focus to <body>; hand it to the next step instead.
+       preventScroll, then scroll deliberately — focus() alone would slam the
+       panel to the top edge with no easing and no regard for reduced motion. */
     this.el.successCta.focus({ preventScroll: true });
+    this.bringIntoView(this.el.success);
 
     this.isAnimating = false;
   }
