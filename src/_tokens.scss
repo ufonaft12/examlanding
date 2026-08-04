@@ -1,0 +1,59 @@
+// ---------------------------------------------------------------------------
+// Design tokens.
+//
+// These are emitted as CSS custom properties rather than kept as Sass variables
+// because the runtime needs to re-point --accent per card: .card--gold and
+// .card--green each rebind it, and every descendant follows. A Sass variable is
+// resolved at compile time and cannot be overridden by a class at runtime.
+//
+// The radius and surface scales are kept complete even where a step is not
+// currently consumed — a half-scale is worse to inherit than an unused step.
+// ---------------------------------------------------------------------------
+
+// Keys are quoted deliberately: "green" and "gold" are CSS colour keywords, and
+// an unquoted key would be parsed as a colour value rather than a name.
+$tokens: (
+  "bg":          #0b0e14,
+  "bg-2":        #0e1219,
+  "surface":     rgba(255, 255, 255, 0.045),
+  "surface-2":   rgba(255, 255, 255, 0.075),
+  "line":        rgba(255, 255, 255, 0.09),
+  "line-strong": rgba(255, 255, 255, 0.16),
+  "ink":         #eef2f7,
+  "ink-2":       #9aa5b6,
+  "ink-3":       #7e8899,
+  "green":       #00e676,
+  "green-dim":   rgba(0, 230, 118, 0.16),
+  "gold":        #ffd700,
+  "gold-dim":    rgba(255, 215, 0, 0.14),
+  "accent":      var(--gold),
+  "accent-dim":  var(--gold-dim),
+  "r-lg":        22px,
+  "r-md":        14px,
+  "r-sm":        10px,
+  "pad":         18px,
+  "ease":        cubic-bezier(0.2, 0.7, 0.2, 1),
+  // held as one string: interpolating a Sass list would strip the quotes from
+  // "Segoe UI" on the way out
+  "font":        '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif'
+);
+
+@mixin emit {
+  :root {
+    @each $name, $value in $tokens {
+      --#{$name}: #{$value};
+    }
+  }
+}
+
+// Brand colours that are not themeable — they only ever appear inside one
+// gradient or shadow, so a custom property would buy nothing.
+$gold-hot:    #ffe45c;
+$gold-deep:   #d99b00;
+$gold-amber:  #ff9d00;
+$green-hot:   #5cffab;
+$ink-on-gold: #151006;
+$ink-on-cta:  #0a0d12;
+$ink-on-tick: #06210f;
+$card-top:    #151a24;
+$card-bottom: #10141c;

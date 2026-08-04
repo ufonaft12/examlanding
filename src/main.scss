@@ -1,0 +1,27 @@
+// ---------------------------------------------------------------------------
+// Deferred stylesheet — compiled to style.css.
+//
+// Everything the boot gate hides. Loaded without blocking render; the mandated
+// 1.5s spinner is the budget it gets to arrive, and .app sits at opacity 0
+// until it has, so there is no window in which unstyled content can show.
+//
+// Tokens are NOT re-emitted here — critical.scss already put them on :root.
+// ---------------------------------------------------------------------------
+
+@use "layout";
+@use "card";
+@use "button";
+@use "vault";
+@use "match";
+@use "bet";
+
+// Above 640px the page stops being a phone column: more gutter, wider measure,
+// roomier cards. One breakpoint is all this layout needs.
+@media (min-width: 640px) {
+  :root { --pad: 24px; }
+
+  .wrap { max-width: 600px; }
+  .hero { padding-top: 44px; }
+  .card { padding: 26px 24px 20px; }
+  .vaults { gap: 14px; }
+}

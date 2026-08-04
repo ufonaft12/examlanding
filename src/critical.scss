@@ -1,0 +1,25 @@
+// ---------------------------------------------------------------------------
+// Critical CSS — compiled and inlined into index.html by build.js.
+//
+// Scope is decided by one question: what is on screen before .app.is-ready?
+// Only the loader. So this carries the tokens, the reset, the loader itself and
+// the app's hidden state — and nothing else. Everything below the boot gate
+// ships in style.css, which is fetched without blocking render and has the full
+// 1.5s of simulated latency to arrive before anything it styles is revealed.
+// ---------------------------------------------------------------------------
+
+@use "base";   // emits the :root token block, then the reset
+@use "loader";
+
+// Declared here rather than in main.scss on purpose: it uses !important, so it
+// wins wherever it lands in the cascade, and the loader's own spinners need it
+// from the first frame.
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

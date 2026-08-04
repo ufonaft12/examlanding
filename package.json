@@ -1,0 +1,15 @@
+{
+  "name": "vaultbet-landing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mobile-first interactive casino and sportsbook onboarding concepts. Zero runtime dependencies.",
+  "scripts": {
+    "build": "node build.js",
+    "check": "node build.js --check",
+    "watch": "sass --watch src/main.scss:style.css",
+    "serve": "npx --yes serve ."
+  },
+  "devDependencies": {
+    "sass": "^1.77.0"
+  }
+}

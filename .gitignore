@@ -1,3 +1,6 @@
+# build tooling — the compiled artefacts are committed, the compiler is not
+node_modules/
+
 # local tooling state
 .agentic-security/
 .claude/

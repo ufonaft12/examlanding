@@ -1,0 +1,227 @@
+@use "tokens" as t;
+
+// Ambient glow. Static gradients, never animated — it costs one paint and then
+// nothing, which is why it survives the "transform/opacity only" rule.
+body::before {
+  content: "";
+  position: fixed;
+  inset: -30% -30% auto -30%;
+  height: 70vh;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(45% 55% at 22% 25%, rgba(255, 215, 0, 0.1), transparent 70%),
+    radial-gradient(45% 55% at 80% 15%, rgba(0, 230, 118, 0.09), transparent 70%);
+}
+
+.wrap {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 var(--pad);
+}
+
+// ---------------------------------------------------------------- header ---
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(11, 14, 20, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 60px;
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  text-decoration: none;
+  color: var(--ink);
+
+  &__mark {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: linear-gradient(140deg, var(--gold), t.$gold-amber);
+    color: t.$ink-on-gold;
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+
+  &__word {
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.16em;
+  }
+}
+
+// Product switch. The pill is a separate element sliding under equal-width
+// buttons, so the indicator geometry stays correct whatever the labels say.
+.switch {
+  position: relative;
+  display: flex;
+  padding: 4px;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+
+  &__pill {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 5px);
+    height: calc(100% - 8px);
+    border-radius: 999px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    transform: translate3d(0, 0, 0);
+    transition:
+      transform 0.32s var(--ease),
+      background-color 0.32s var(--ease),
+      border-color 0.32s var(--ease);
+    will-change: transform;
+  }
+
+  &[data-active="sports"] &__pill {
+    transform: translate3d(calc(100% + 2px), 0, 0);
+  }
+
+  &__btn {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    padding: 7px 13px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink-2);
+    white-space: nowrap;
+    transition: color 0.25s var(--ease);
+
+    &.is-active { color: var(--ink); }
+  }
+}
+
+// ------------------------------------------------------------------ hero ---
+
+.hero {
+  padding: 30px var(--pad) 20px;
+  text-align: center;
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px;
+    margin-bottom: 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 12px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+
+  &__title {
+    font-size: clamp(28px, 8.4vw, 40px);
+    line-height: 1.08;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  &__sub {
+    margin-top: 12px;
+    color: var(--ink-2);
+    font-size: 15px;
+    text-wrap: pretty;
+  }
+
+  // social proof is optional in config — collapse rather than leave a gap
+  &__proof {
+    margin: -6px 0 14px;
+    font-size: 12px;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+
+    &:empty { display: none; }
+  }
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: blink 1.8s infinite;
+}
+
+// ----------------------------------------------------------------- views ---
+
+.view {
+  display: none;
+  padding-bottom: 34px;
+
+  &.is-active {
+    display: block;
+    animation: viewIn 0.42s var(--ease) both;
+  }
+}
+
+@keyframes viewIn {
+  from { opacity: 0; transform: translate3d(0, 16px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+// ---------------------------------------------------------------- footer ---
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 20px 0 34px;
+  text-align: center;
+
+  &__age {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  &__legal {
+    max-width: 400px;
+    margin: 8px auto 0;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-3);
+  }
+}
+
+.age {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--ink-3);
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--ink-2);
+}

@@ -1,0 +1,99 @@
+@use "tokens" as t;
+
+// Each card rebinds --accent, so eyebrows, focus rings and the switch pill
+// inside it pick up the product colour without a single extra selector.
+.card {
+  padding: 20px 18px 16px;
+  background: linear-gradient(180deg, t.$card-top, t.$card-bottom);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 24px 60px -32px rgba(0, 0, 0, 0.9);
+
+  &--gold {
+    --accent: var(--gold);
+    --accent-dim: var(--gold-dim);
+  }
+
+  &--green {
+    --accent: var(--green);
+    --accent-dim: var(--green-dim);
+  }
+
+  &__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  &__title {
+    margin-top: 6px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  &__sub {
+    margin-top: 5px;
+    color: var(--ink-2);
+    font-size: 14px;
+  }
+}
+
+// Wagering terms and expiry. Held at 12px because this is the text a player is
+// entitled to be able to read, not the text we would like them to skip.
+.fineprint {
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+// ---------------------------------------------------------------- reveal ---
+
+.reveal {
+  margin-top: 18px;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid rgba(255, 215, 0, 0.34);
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));
+  animation: slideDown 0.45s var(--ease) both;
+
+  &__art {
+    display: block;
+    width: 74px;
+    height: 74px;
+    margin: 0 auto 8px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 20px rgba(255, 215, 0, 0.4));
+  }
+
+  &__label {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+
+  // tabular-nums so the count-up does not jitter the line width per frame
+  &__prize {
+    margin-top: 6px;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__detail {
+    margin-top: 4px;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translate3d(0, -10px, 0) scaleY(0.96); }
+  to   { opacity: 1; transform: none; }
+}
