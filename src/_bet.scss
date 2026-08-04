@@ -101,7 +101,7 @@
   padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--sunken);        // recessed, to match the fixture panel
 
   &__row {
     display: flex;

@@ -1,41 +1,158 @@
-// The 1X2 leg. Team cards and the draw chip are real <button>s with
-// aria-pressed, so the selected state is a class and an ARIA state, never a
-// colour alone.
+// The fixture and the 1X2 market.
+//
+// The outcomes are laid out the way a bookmaker lays them out — three prices in
+// a row, tagged 1 / X / 2 — rather than as two team cards with a draw squeezed
+// between them. That earlier shape read as "choose a side"; this one reads as a
+// market you can take a position on, which is what it is.
 
 .match {
   margin-top: 16px;
   padding: 14px;
+  overflow: hidden;                 // lets the meta strip bleed to the edges
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--sunken);
 
+  // competition and kick-off become a header strip rather than floating text
   &__meta {
-    font-size: 12px;
-    letter-spacing: 0.09em;
+    margin: -14px -14px 0;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.045);
+    font-size: 11px;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--ink-3);
     text-align: center;
   }
 
-  &__row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: start;
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+
+  &__market {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  // the instruction retires once it has been followed
+  &__hint {
+    font-size: 12px;
+    color: var(--ink-3);
+    transition: opacity 0.25s var(--ease);
+  }
+
+  &.has-pick &__hint { opacity: 0; }
+}
+
+// ---------------------------------------------------------------- fixture ---
+
+.fixture {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 10px;
+  margin-top: 14px;
+
+  &__side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 8px;
-    margin-top: 12px;
+  }
+
+  &__name {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  &__vs {
+    align-self: center;
+    padding: 0 2px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
+  }
+
+  // form as chips: the run reads as a shape before it reads as letters
+  &__form {
+    display: flex;
+    gap: 3px;
+
+    b {
+      display: grid;
+      place-items: center;
+      width: 15px;
+      height: 15px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.07);
+      font-size: 9px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--ink-2);
+    }
+
+    // colour is a second signal, never the only one — the letter still says it
+    b[data-r="W"] { background: rgba(0, 230, 118, 0.16); color: #5cffab; }
+    b[data-r="L"] { background: rgba(255, 110, 110, 0.14); color: #ff9b9b; }
   }
 }
 
-.team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  text-align: center;
-  padding: 10px 6px;
-  border: 1px solid transparent;
-  border-radius: var(--r-md);
-  background: transparent;
+// A shield striped in the club's colours, driven by --c1/--c2 that the
+// controller writes from config. No logo files ship with this build, and real
+// club marks are trademarked; two stripes are enough to tell the sides apart.
+.crest {
+  position: relative;
+  width: 40px;
+  height: 44px;
+  clip-path: polygon(0 0, 100% 0, 100% 58%, 50% 100%, 0 58%);
+  background: repeating-linear-gradient(90deg, var(--c1, #8b95a8) 0 7px, var(--c2, #5f6879) 7px 14px);
+  filter: drop-shadow(0 4px 9px rgba(0, 0, 0, 0.55));
+
+  &::before {                       // shaded crown, so the shield reads as an object
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.34);
+  }
+
+  &::after {                        // hairline edge to lift it off the panel
+    content: "";
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  }
+}
+
+// ------------------------------------------------------------ 1X2 market ---
+
+.odds-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pick {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding: 10px 6px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.028));
   transition:
     opacity 0.25s var(--ease),
     border-color 0.22s var(--ease),
@@ -44,126 +161,80 @@
 
   &:active:not([disabled]) { transform: scale(0.97); }
 
-  &.is-picked {
-    border-color: rgba(0, 230, 118, 0.55);
-    background: rgba(0, 230, 118, 0.07);
-    box-shadow: 0 0 24px -10px rgba(0, 230, 118, 0.75);
-  }
-
-  &__crest {
-    display: grid;
-    place-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: var(--surface-2);
-    border: 1px solid var(--line-strong);
-    font-size: 12px;
+  &__tag {
+    font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.04em;
-    color: var(--ink);
+    letter-spacing: 0.12em;
+    color: var(--ink-3);
   }
 
   &__name {
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  &__odds {
-    font-size: 12px;
-    font-weight: 800;
-    color: var(--green);
-    font-variant-numeric: tabular-nums;
-  }
-
-  &__form {
-    font-size: 12px;
-    letter-spacing: 0.18em;
-    color: var(--ink-3);
-  }
-
-  // the away crest stays neutral: green now means "you picked this", and a
-  // permanently green side would read as a selection that cannot be cleared
-  &--away &__crest {
-    background: var(--surface-2);
-    border-color: var(--line-strong);
-  }
-}
-
-.pick-draw {
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  padding: 6px 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
-  transition:
-    opacity 0.25s var(--ease),
-    border-color 0.22s var(--ease),
-    background-color 0.22s var(--ease),
-    transform 0.16s var(--ease);
-
-  &:active:not([disabled]) { transform: scale(0.95); }
-
-  &__vs {
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    color: var(--ink-3);
-  }
-
-  &__label {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--ink-2);
+    transition: color 0.22s var(--ease);
   }
 
-  &__odds {
-    font-size: 12px;
+  &__price {
+    font-size: 17px;
     font-weight: 800;
-    color: var(--green);
+    color: var(--ink);
     font-variant-numeric: tabular-nums;
+    transition: color 0.22s var(--ease);
   }
 
   &.is-picked {
-    border-color: rgba(0, 230, 118, 0.55);
-    background: rgba(0, 230, 118, 0.09);
+    border-color: rgba(0, 230, 118, 0.6);
+    background: linear-gradient(180deg, rgba(0, 230, 118, 0.17), rgba(0, 230, 118, 0.05));
+
+    .pick__name { color: var(--ink); }
+    .pick__price { color: var(--green); }
   }
+
+  // a tick badge in the corner: selection is carried by a mark and by
+  // aria-pressed, not by colour alone
+  &::after,
+  &::before {
+    content: "";
+    position: absolute;
+    opacity: 0;
+    transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+  }
+
+  &::after {
+    top: 6px;
+    right: 6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--green);
+    transform: scale(0.4);
+  }
+
+  &::before {
+    top: 10px;
+    right: 11px;
+    z-index: 1;
+    width: 4px;
+    height: 6px;
+    border-right: 2px solid #06210f;
+    border-bottom: 2px solid #06210f;
+    transform: rotate(42deg) scale(0.4);
+  }
+
+  &.is-picked::after { opacity: 1; transform: scale(1); }
+  &.is-picked::before { opacity: 1; transform: rotate(42deg) scale(1); }
 }
 
-// Pointer devices: show that the outcomes are pressable at all. Guarded on
-// :not(.is-static) so the degraded, unpriced state stays visibly inert.
+// once a position is taken the others recede, so the slip reads at a glance
+.odds-row.has-pick .pick:not(.is-picked) { opacity: 0.42; }
+
 @media (hover: hover) {
-  .match__row:not(.is-static) .team:hover:not(.is-picked):not([disabled]),
-  .match__row:not(.is-static) .pick-draw:hover:not(.is-picked):not([disabled]) {
-    border-color: var(--line-strong);
-    background: rgba(255, 255, 255, 0.05);
+  .odds-row .pick:hover:not(.is-picked):not([disabled]) {
+    border-color: rgba(0, 230, 118, 0.45);
+    background: linear-gradient(180deg, rgba(0, 230, 118, 0.1), rgba(255, 255, 255, 0.03));
   }
 
-  // once something is chosen the others are dimmed — lift them part-way back
-  // on hover so they still read as switchable
-  .match__row:not(.is-static).has-pick .team:hover:not(.is-picked),
-  .match__row:not(.is-static).has-pick .pick-draw:hover:not(.is-picked) {
-    opacity: 0.75;
-  }
-}
-
-// Dim the outcomes not chosen, so the selected one carries the row.
-.match__row.has-pick .team:not(.is-picked),
-.match__row.has-pick .pick-draw:not(.is-picked) { opacity: 0.42; }
-
-// Config with no winnerOdds: the leg degrades to a plain VS separator rather
-// than offering a control that cannot be priced.
-.match__row.is-static {
-  .pick-draw {
-    border-color: transparent;
-    background: none;
-    padding: 0;
-  }
-
-  .pick-draw__label { display: none; }
+  // lift a dimmed outcome part-way back on hover — still switchable
+  .odds-row.has-pick .pick:hover:not(.is-picked) { opacity: 0.75; }
 }

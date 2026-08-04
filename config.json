@@ -43,8 +43,10 @@
       "name": "El Clásico",
       "kickoff": "Sat 21:00 CET · Santiago Bernabéu",
       "market": "Total Goals — Over",
-      "home": { "name": "Real Madrid", "short": "RMA", "form": "W W D W L" },
-      "away": { "name": "Barcelona", "short": "BAR", "form": "W W W D W" },
+      "winnerMarket": "Match Winner",
+      "pickHint": "Optional · tap to add a leg",
+      "home": { "name": "Real Madrid", "short": "RMA", "form": "W W D W L", "color": "#eef2f9", "color2": "#c2cbdd" },
+      "away": { "name": "Barcelona", "short": "BAR", "form": "W W W D W", "color": "#a3123c", "color2": "#1c3f8f" },
       "winnerOdds": { "home": 2.10, "draw": 3.60, "away": 2.95 }
     },
     "stake": 20,

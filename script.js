@@ -45,6 +45,9 @@ class LandingApp {
       casinoCta:   $('#casinoCta'),
       range:       $('#goalsRange'),
       matchRow:    $('#matchRow'),
+      matchBox:    $('.match'),
+      matchHead:   $('#matchHead'),
+      pickHint:    $('[data-pick-hint]'),
       pickBtns:    $$('[data-pick]'),
       winnerRow:   $('#winnerRow'),
       winnerName:  $('#winnerName'),
@@ -57,6 +60,7 @@ class LandingApp {
       oddsLabel:   $('#oddsLabel'),
       payoutOut:   $('#payoutOut'),
       sportsCta:   $('#sportsCta'),
+      ctaNote:     $('#ctaNote'),
       success:     $('#sportsSuccess'),
       successTitle:$('#successTitle'),
       successSummary:$('#successSummary'),
@@ -176,10 +180,14 @@ class LandingApp {
     set('[data-market]',  m.market);
     set('[data-home-name]',  m.home.name);
     set('[data-home-short]', m.home.short);
-    set('[data-home-form]',  m.home.form);
     set('[data-away-name]',  m.away.name);
     set('[data-away-short]', m.away.short);
-    set('[data-away-form]',  m.away.form);
+    set('[data-winner-market]', m.winnerMarket || 'Match Winner');
+
+    /* form as chips, and club colour on the crest — the two sides have to read
+       as different entities, and no logo file ships with this build */
+    this.paintTeam('home', m.home);
+    this.paintTeam('away', m.away);
 
     /* optional match-winner leg — interactive only when config prices all three outcomes */
     const w = m.winnerOdds;
@@ -193,8 +201,12 @@ class LandingApp {
         if (cell) { cell.textContent = this.winnerOdds[k].toFixed(2); cell.hidden = false; }
         btn.setAttribute('aria-label', 'Add ' + names[k] + ' to win to your bet');
       });
+      this.el.pickHint.textContent = m.pickHint || '';
     } else {
-      this.el.matchRow.classList.add('is-static');
+      /* the market cannot be priced, so it is removed rather than shown inert:
+         the fixture above it still earns its place, three dead buttons do not */
+      this.el.matchRow.hidden = true;
+      this.el.matchHead.hidden = true;
       this.el.pickBtns.forEach((btn) => { btn.disabled = true; btn.removeAttribute('aria-pressed'); });
     }
     $('.btn__label', this.el.sportsCta).textContent = s.cta;
@@ -203,6 +215,40 @@ class LandingApp {
 
     this.el.range.value = String(this.line);
     this.updateBet();
+  }
+
+  /* Club identity from config: the colour drives the crest stripes only, never
+     a label, so a dark club colour cannot cost the text its contrast. Form
+     becomes chips — the run reads as a shape before it reads as letters. */
+  paintTeam(side, team) {
+    const crest = $('[data-' + side + '-crest]');
+    const hex = (v) => {
+      const h = String(v || '').trim().replace('#', '');
+      const f = h.length === 3 ? h.split('').map((x) => x + x).join('') : h;
+      return /^[0-9a-f]{6}$/i.test(f) ? '#' + f : null;
+    };
+    /* one colour still works, and neither is required — the fallback is
+       neutral steel, never a broken gradient */
+    const c1 = hex(team.color);
+    if (crest && c1) {
+      crest.style.setProperty('--c1', c1);
+      crest.style.setProperty('--c2', hex(team.color2) || c1);
+    }
+
+    const box = $('[data-' + side + '-form]');
+    if (!box) return;
+    box.textContent = '';
+    const runs = String(team.form || '').split(/\s+/).filter(Boolean);
+    if (!runs.length) return;
+    /* the chips are decorative shapes to a screen reader; give it the run in
+       words instead of five stray letters */
+    box.setAttribute('aria-label', 'Recent form: ' + runs.join(', '));
+    runs.forEach((r) => {
+      const chip = document.createElement('b');
+      chip.dataset.r = r.toUpperCase();
+      chip.textContent = r.toUpperCase();
+      box.appendChild(chip);
+    });
   }
 
   /* one vault per configured prize — count is data-driven, not hard-coded */
@@ -234,7 +280,29 @@ class LandingApp {
   /* ============ events ============ */
   bind() {
     this.el.tabs.forEach((tab) => {
+      tab.tabIndex = tab.dataset.view === this.view ? 0 : -1;
       tab.addEventListener('click', () => this.switchView(tab.dataset.view));
+    });
+
+    /* role="tablist" carries an implicit keyboard contract: arrows move between
+       tabs, Home/End jump to the ends. Without it the role is a lie to a screen
+       reader, which announces "tab 1 of 2" and then finds the arrows do nothing. */
+    this.el.switchWrap.addEventListener('keydown', (e) => {
+      const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      const from = this.el.tabs.findIndex((t) => t.dataset.view === this.view);
+      let to = null;
+
+      if (step) to = (from + step + this.el.tabs.length) % this.el.tabs.length;
+      else if (e.key === 'Home') to = 0;
+      else if (e.key === 'End') to = this.el.tabs.length - 1;
+      else return;
+
+      e.preventDefault();                 // stop the arrows scrolling the page
+      const tab = this.el.tabs[to];
+      this.switchView(tab.dataset.view);
+      /* follow focus only if the switch was allowed — during an animation lock
+         switchView is a no-op, and moving focus would desync from aria-selected */
+      if (this.view === tab.dataset.view) tab.focus();
     });
 
     this.el.vaultBtns.forEach((btn) => {
@@ -271,6 +339,8 @@ class LandingApp {
       const on = tab.dataset.view === next;
       tab.classList.toggle('is-active', on);
       tab.setAttribute('aria-selected', String(on));
+      /* roving tabindex: the tablist is one Tab stop, arrows move within it */
+      tab.tabIndex = on ? 0 : -1;
     });
 
     this.el.views.forEach((section) => {
@@ -459,6 +529,7 @@ class LandingApp {
       btn.setAttribute('aria-pressed', String(on));
     });
     this.el.matchRow.classList.toggle('has-pick', Boolean(this.pick));
+    this.el.matchBox.classList.toggle('has-pick', Boolean(this.pick));
     this.updateBet(true);
     /* adding the leg pushes two rows into the calculator and the CTA down with
        them — on a phone that is enough to put it under the fold */
@@ -494,6 +565,12 @@ class LandingApp {
     this.el.oddsLabel.textContent = 'Over ' + label;
     this.el.oddsOut.textContent   = over.toFixed(2);   // the goals leg keeps its own price on screen
     this.el.payoutOut.textContent = money(stake * odds);
+
+    /* state the bet on the button that commits it: the winner leg is optional,
+       so with nothing picked the CTA would otherwise look live for no reason */
+    if (this.el.ctaNote) {
+      this.el.ctaNote.textContent = this.betLabel + ' · ' + money(stake * odds);
+    }
 
     /* winner + combined rows exist only while the optional leg is active, so the
        player can verify winnerOdds × overOdds instead of trusting one number */
