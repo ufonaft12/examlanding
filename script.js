@@ -292,7 +292,10 @@ class LandingApp {
     this.el.prizeDetail.textContent = prize.detail;
     this.el.reveal.hidden = false;
     this.countUp(this.el.prizeTitle, prize.title);
-    this.bringIntoView(this.el.reveal);
+    /* target the button, not the panel: a panel taller than the viewport gets
+       top-aligned, which puts the CTA back under the fold — and config copy
+       decides how tall these panels are */
+    this.bringIntoView(this.el.casinoCta);
 
     this.isAnimating = false;                            // reveal complete
   }
@@ -300,10 +303,21 @@ class LandingApp {
   /* A panel that opens below the fold is a reward the player never sees, and a
      CTA they have to hunt for. Scroll only when it is genuinely out of view, so
      nothing jumps on a desktop where it already fits. */
+  /* What is actually on screen. iOS Safari's layout viewport runs underneath the
+     browser toolbars, so innerHeight over-reports the visible area and anything
+     aligned to its bottom edge ends up half-hidden behind the chrome.
+     visualViewport reports the real thing. */
+  visibleBand() {
+    const vv = window.visualViewport;
+    return vv
+      ? { top: vv.offsetTop, height: vv.height }
+      : { top: 0, height: window.innerHeight || document.documentElement.clientHeight };
+  }
+
   bringIntoView(el) {
-    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const band = this.visibleBand();
     const box = el.getBoundingClientRect();
-    if (box.top >= 0 && box.bottom <= vh) return;    // already fully visible
+    if (box.top >= band.top && box.bottom <= band.top + band.height) return;  // already visible
 
     /* Let the engine decide where the scroll should land. Hand-rolled geometry
        gets this wrong: the views animate in, which makes them containing blocks,
@@ -314,11 +328,22 @@ class LandingApp {
        intermediate position is never painted. */
     const from = window.scrollY;
     el.scrollIntoView({ block: 'nearest' });
-    const target = window.scrollY;
-    if (target === from) return;
+    let target = window.scrollY;
     window.scrollTo(0, from);
 
-    this.scrollWindowTo(target);
+    /* the engine aligned to the layout viewport, which on iOS extends behind the
+       toolbars — push on by however much of it is not really on screen */
+    const hidden = Math.max(0, (window.innerHeight || 0) - band.height);
+    if (hidden && target > from) target += hidden;
+
+    /* and settle once the motion is over: the panel is still playing its entry
+       animation while all of this is measured, so the first aim runs short */
+    this.scrollWindowTo(target, target === from ? 0 : 420, () => {
+      const now = this.visibleBand();
+      const rect = el.getBoundingClientRect();
+      const over = rect.bottom - (now.top + now.height);
+      if (over > 1) window.scrollTo(0, window.scrollY + over + 16);
+    });
   }
 
   /* Eased scroll driven by rAF rather than `behavior: 'smooth'`, which is a
@@ -520,7 +545,7 @@ class LandingApp {
        preventScroll, then scroll deliberately — focus() alone would slam the
        panel to the top edge with no easing and no regard for reduced motion. */
     this.el.successCta.focus({ preventScroll: true });
-    this.bringIntoView(this.el.success);
+    this.bringIntoView(this.el.successCta);
 
     this.isAnimating = false;
   }
