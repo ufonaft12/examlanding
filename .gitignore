@@ -1,0 +1,8 @@
+# local tooling state
+.agentic-security/
+.claude/
+
+# editor / OS noise
+.DS_Store
+Thumbs.db
+*.swp

@@ -1,0 +1,59 @@
+{
+  "brand": {
+    "name": "VAULTBET",
+    "mark": "VB",
+    "tagline": "Play smart. 18+ only."
+  },
+  "variants": {
+    "A": {
+      "headline": "Claim Your Exclusive Welcome Package",
+      "subline": "Two ways to start. Pick a vault or build a prediction — your reward unlocks instantly."
+    },
+    "B": {
+      "headline": "Unlock Your Instant $500 Bonus Today",
+      "subline": "No promo code needed. Choose your reward below and it's applied to your first deposit."
+    }
+  },
+  "casino": {
+    "eyebrow": "Casino · Mystery Vault Pick",
+    "title": "Pick 1 of 3 Vaults",
+    "subtitle": "One tap. One reward. Every vault is a winner.",
+    "cta": "CLAIM BONUS NOW",
+    "footnote": "Bonus credited on first deposit of $10+. 30x wagering, 7-day expiry. T&Cs apply.",
+    "prizes": [
+      { "title": "100 Free Spins", "detail": "+ $50 Bonus on Book of Vaults", "value": "$50", "image": "" },
+      { "title": "$50 Cash Bonus", "detail": "Instantly credited, no wagering on winnings", "value": "$50", "image": "" },
+      { "title": "200% Deposit Match", "detail": "Up to $500 across your first deposit", "value": "$500", "image": "" }
+    ]
+  },
+  "sports": {
+    "eyebrow": "Sports · Match Predictor",
+    "title": "Build Your First Bet",
+    "subtitle": "Slide to set the total goals line and watch your payout update live.",
+    "cta": "Lock Prediction & Claim Bet",
+    "footnote": "Free bet stake not returned. Min odds 1.50. 7-day expiry. T&Cs apply.",
+    "match": {
+      "competition": "La Liga · Matchday 12",
+      "name": "El Clásico",
+      "kickoff": "Sat 21:00 CET · Santiago Bernabéu",
+      "market": "Total Goals — Over",
+      "home": { "name": "Real Madrid", "short": "RMA", "form": "W W D W L" },
+      "away": { "name": "Barcelona", "short": "BAR", "form": "W W W D W" }
+    },
+    "stake": 20,
+    "baseOdds": 1.85,
+    "oddsByLine": {
+      "0.5": 1.12,
+      "1.5": 1.44,
+      "2.5": 1.85,
+      "3.5": 2.7,
+      "4.5": 4.1,
+      "5.5": 6.5
+    },
+    "success": {
+      "title": "Prediction Locked In",
+      "body": "Your Over {line} goals selection is saved. Finish sign-up in 60 seconds and we'll match it with a risk-free $20 free bet.",
+      "cta": "Create Account & Bet"
+    }
+  }
+}

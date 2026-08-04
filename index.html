@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<meta name="description" content="Interactive casino and sportsbook welcome offer — pick a mystery vault or build a match prediction.">
+<meta name="color-scheme" content="dark">
+<title>VAULTBET — Claim Your Welcome Package</title>
+<link rel="preload" href="config.json" as="fetch" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loader" class="loader" role="status" aria-live="polite">
+  <div class="loader__ring" aria-hidden="true"><span></span><span></span><span></span></div>
+  <p class="loader__text">Securing your session<span class="loader__dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></p>
+  <span class="sr-only">Loading offers</span>
+</div>
+
+<div id="app" class="app" aria-busy="true">
+
+  <header class="site-header">
+    <div class="wrap site-header__inner">
+      <a class="logo" href="#top" aria-label="VAULTBET home">
+        <span class="logo__mark" data-brand-mark>VB</span>
+        <span class="logo__word" data-brand-name>VAULTBET</span>
+      </a>
+
+      <div class="switch" role="tablist" aria-label="Choose product">
+        <span class="switch__pill" aria-hidden="true"></span>
+        <button class="switch__btn is-active" type="button" role="tab" id="tab-casino"
+                aria-selected="true" aria-controls="view-casino" data-view="casino">
+          <span aria-hidden="true">🎰</span> Casino
+        </button>
+        <button class="switch__btn" type="button" role="tab" id="tab-sports"
+                aria-selected="false" aria-controls="view-sports" data-view="sports">
+          <span aria-hidden="true">⚽</span> Sports
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <p class="hero__badge"><span class="dot" aria-hidden="true"></span> Offer live · <span data-variant-label>Variant A</span></p>
+      <h1 class="hero__title" id="headline">Claim Your Exclusive Welcome Package</h1>
+      <p class="hero__sub" id="subline">Two ways to start. Pick a vault or build a prediction.</p>
+    </section>
+
+    <!-- CASINO -->
+    <section class="view is-active" id="view-casino" role="tabpanel" aria-labelledby="tab-casino" data-view="casino">
+      <div class="wrap">
+        <div class="card card--gold">
+          <p class="card__eyebrow" data-casino-eyebrow>Casino · Mystery Vault Pick</p>
+          <h2 class="card__title" data-casino-title>Pick 1 of 3 Vaults</h2>
+          <p class="card__sub" data-casino-sub>One tap. One reward.</p>
+
+          <div class="vaults" id="vaults" role="group" aria-label="Mystery vaults">
+            <button class="vault" type="button" data-index="0" aria-label="Open mystery vault 1">
+              <span class="vault__glow" aria-hidden="true"></span>
+              <span class="vault__body">
+                <span class="vault__lid"><span class="vault__dial" aria-hidden="true"></span></span>
+                <span class="vault__face"><span class="vault__num">1</span></span>
+                <span class="vault__prize" aria-hidden="true"></span>
+              </span>
+            </button>
+            <button class="vault" type="button" data-index="1" aria-label="Open mystery vault 2">
+              <span class="vault__glow" aria-hidden="true"></span>
+              <span class="vault__body">
+                <span class="vault__lid"><span class="vault__dial" aria-hidden="true"></span></span>
+                <span class="vault__face"><span class="vault__num">2</span></span>
+                <span class="vault__prize" aria-hidden="true"></span>
+              </span>
+            </button>
+            <button class="vault" type="button" data-index="2" aria-label="Open mystery vault 3">
+              <span class="vault__glow" aria-hidden="true"></span>
+              <span class="vault__body">
+                <span class="vault__lid"><span class="vault__dial" aria-hidden="true"></span></span>
+                <span class="vault__face"><span class="vault__num">3</span></span>
+                <span class="vault__prize" aria-hidden="true"></span>
+              </span>
+            </button>
+          </div>
+
+          <div class="reveal" id="casinoReveal" hidden aria-live="polite">
+            <p class="reveal__label">Your reward</p>
+            <p class="reveal__prize" id="prizeTitle">—</p>
+            <p class="reveal__detail" id="prizeDetail">—</p>
+            <button class="btn btn--gold btn--pulse" type="button" id="casinoCta">CLAIM BONUS NOW</button>
+          </div>
+
+          <p class="fineprint" data-casino-foot></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SPORTS -->
+    <section class="view" id="view-sports" role="tabpanel" aria-labelledby="tab-sports" data-view="sports" hidden>
+      <div class="wrap">
+        <div class="card card--green">
+          <p class="card__eyebrow" data-sports-eyebrow>Sports · Match Predictor</p>
+          <h2 class="card__title" data-sports-title>Build Your First Bet</h2>
+          <p class="card__sub" data-sports-sub>Slide to set the goals line.</p>
+
+          <div class="match">
+            <p class="match__meta"><span data-comp></span> · <span data-kickoff></span></p>
+            <div class="match__row">
+              <div class="team">
+                <span class="team__crest" data-home-short aria-hidden="true">RMA</span>
+                <span class="team__name" data-home-name>Real Madrid</span>
+                <span class="team__form" data-home-form></span>
+              </div>
+              <span class="match__vs" aria-hidden="true">VS</span>
+              <div class="team team--away">
+                <span class="team__crest" data-away-short aria-hidden="true">BAR</span>
+                <span class="team__name" data-away-name>Barcelona</span>
+                <span class="team__form" data-away-form></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="slider">
+            <div class="slider__head">
+              <label class="slider__label" for="goalsRange" data-market>Total Goals — Over</label>
+              <output class="slider__value" id="lineOut" for="goalsRange">2.5</output>
+            </div>
+            <input class="range" type="range" id="goalsRange" min="0.5" max="5.5" step="1" value="2.5"
+                   aria-describedby="payoutBox">
+            <div class="slider__ticks" aria-hidden="true">
+              <span>0.5</span><span>1.5</span><span>2.5</span><span>3.5</span><span>4.5</span><span>5.5</span>
+            </div>
+          </div>
+
+          <div class="calc" id="payoutBox" aria-live="polite">
+            <div class="calc__row"><span>Stake</span><strong id="stakeOut">$20.00</strong></div>
+            <div class="calc__row"><span>Odds <em id="oddsLabel">Over 2.5</em></span><strong id="oddsOut">1.85</strong></div>
+            <div class="calc__row calc__row--total"><span>Potential Payout</span><strong id="payoutOut">$37.00</strong></div>
+          </div>
+
+          <button class="btn btn--green" type="button" id="sportsCta">
+            <span class="btn__label">Lock Prediction &amp; Claim Bet</span>
+            <span class="btn__spinner" aria-hidden="true"></span>
+          </button>
+
+          <div class="success" id="sportsSuccess" hidden aria-live="polite">
+            <span class="success__check" aria-hidden="true"></span>
+            <p class="success__title" id="successTitle">Prediction Locked In</p>
+            <p class="success__body" id="successBody"></p>
+            <button class="btn btn--green btn--pulse" type="button" id="successCta">Create Account &amp; Bet</button>
+          </div>
+
+          <p class="fineprint" data-sports-foot></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p class="site-footer__age"><span class="age">18+</span> <span data-brand-tagline>Play smart.</span></p>
+      <p class="site-footer__legal">Demo build for assessment purposes. No real money wagering. Gambling can be addictive — please play responsibly.</p>
+    </div>
+  </footer>
+</div>
+
+<script src="script.js" defer></script>
+</body>
+</html>
