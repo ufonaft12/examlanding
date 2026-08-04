@@ -55,6 +55,8 @@
   margin-top: 18px;
   padding: 16px;
   text-align: center;
+  scroll-margin-top: 76px;      // clear the sticky header
+  scroll-margin-bottom: 16px;
   border: 1px solid rgba(255, 215, 0, 0.34);
   border-radius: var(--r-md);
   background: linear-gradient(180deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.03));

@@ -301,40 +301,24 @@ class LandingApp {
      CTA they have to hunt for. Scroll only when it is genuinely out of view, so
      nothing jumps on a desktop where it already fits. */
   bringIntoView(el) {
-    const target = this.scrollTargetFor(el);
-    if (target === null) return;
-    /* revealing a panel changes document height and the browser clamps the
-       scroll position when it does — re-check once the motion has finished */
-    this.scrollWindowTo(target, 420, () => {
-      const corrected = this.scrollTargetFor(el);
-      if (corrected !== null) window.scrollTo(0, corrected);
-    });
-  }
-
-  /* Document-space geometry from offsetTop/offsetHeight rather than
-     getBoundingClientRect: the panels animate in with scaleY, and a rect
-     measured mid-animation would aim the scroll at the wrong place. */
-  scrollTargetFor(el) {
     const vh = window.innerHeight || document.documentElement.clientHeight;
-    let top = 0;
-    for (let n = el; n; n = n.offsetParent) top += n.offsetTop;
-    const height = el.offsetHeight;
-    const y = window.scrollY;
+    const box = el.getBoundingClientRect();
+    if (box.top >= 0 && box.bottom <= vh) return;    // already fully visible
 
-    if (top >= y && top + height <= y + vh) return null;   // already fully visible
+    /* Let the engine decide where the scroll should land. Hand-rolled geometry
+       gets this wrong: the views animate in, which makes them containing blocks,
+       so an offsetTop chain under-measures — and a getBoundingClientRect taken
+       mid-animation is skewed by the transform. scrollIntoView knows about all
+       of it, and about the scroll-margin that keeps the CTA off the edge.
+       The jump and the restore happen in one synchronous block, so the
+       intermediate position is never painted. */
+    const from = window.scrollY;
+    el.scrollIntoView({ block: 'nearest' });
+    const target = window.scrollY;
+    if (target === from) return;
+    window.scrollTo(0, from);
 
-    const gap = 16;
-    const header = $('.site-header');
-    const headerH = header ? header.offsetHeight : 0;
-
-    /* normally bring the panel's bottom up — that is where the CTA lives. Only
-       align the top when the panel is above us, or too tall to fit below the
-       sticky header. */
-    const want = (top < y || height + headerH + gap * 2 > vh)
-      ? top - headerH - gap
-      : top + height - vh + gap;
-
-    return Math.max(0, Math.round(want));
+    this.scrollWindowTo(target);
   }
 
   /* Eased scroll driven by rAF rather than `behavior: 'smooth'`, which is a
@@ -438,6 +422,9 @@ class LandingApp {
     });
     this.el.matchRow.classList.toggle('has-pick', Boolean(this.pick));
     this.updateBet(true);
+    /* adding the leg pushes two rows into the calculator and the CTA down with
+       them — on a phone that is enough to put it under the fold */
+    this.bringIntoView(this.el.sportsCta);
   }
 
   oddsFor(line) {

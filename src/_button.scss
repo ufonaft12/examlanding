@@ -18,6 +18,10 @@
   background: var(--accent);
   transition: transform 0.18s var(--ease), opacity 0.25s var(--ease);
   will-change: transform;
+  // when the controller scrolls a CTA into view: clear of the sticky header
+  // above, off the screen edge below
+  scroll-margin-top: 76px;
+  scroll-margin-bottom: 16px;
 
   &--gold {
     background: linear-gradient(140deg, t.$gold-hot, var(--gold));
