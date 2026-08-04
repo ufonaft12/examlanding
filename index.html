@@ -4,9 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0e14">
-<meta name="description" content="Interactive casino and sportsbook welcome offer — pick a mystery vault or build a match prediction.">
 <meta name="color-scheme" content="dark">
-<title>VAULTBET — Claim Your Welcome Package</title>
+<!-- Title, description, canonical and the Facebook / Twitter share card are
+     generated from config.json by build.js — edit the config, not this block.
+     They have to be static: the crawlers behind link previews and search
+     results do not run the JavaScript that hydrates the rest of the page, so
+     anything set only at runtime is invisible to them. -->
+<!-- meta:start -->
+<title>VAULTBET — Claim Your Exclusive Welcome Package</title>
+<meta name="description" content="Two interactive welcome offers — pick a mystery vault or build a match prediction, and see your reward before you sign up. Demo build, 18+.">
+<link rel="canonical" href="https://ufonaft12.github.io/examlanding/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VAULTBET">
+<meta property="og:locale" content="en_GB">
+<meta property="og:title" content="VAULTBET — Claim Your Exclusive Welcome Package">
+<meta property="og:description" content="Two interactive welcome offers — pick a mystery vault or build a match prediction, and see your reward before you sign up. Demo build, 18+.">
+<meta property="og:url" content="https://ufonaft12.github.io/examlanding/">
+<meta property="og:image" content="https://ufonaft12.github.io/examlanding/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="VAULTBET welcome offer — pick a mystery vault or build a match prediction">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="VAULTBET — Claim Your Exclusive Welcome Package">
+<meta name="twitter:description" content="Two interactive welcome offers — pick a mystery vault or build a match prediction, and see your reward before you sign up. Demo build, 18+.">
+<meta name="twitter:image" content="https://ufonaft12.github.io/examlanding/og.png">
+<meta name="twitter:image:alt" content="VAULTBET welcome offer — pick a mystery vault or build a match prediction">
+<!-- meta:end -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ffd700'/%3E%3Ctext x='16' y='23' font-family='Helvetica,Arial,sans-serif' font-size='15' font-weight='bold' text-anchor='middle' fill='%23151006'%3EVB%3C/text%3E%3C/svg%3E">
 <!-- Critical CSS is generated from src/critical.scss by build.js — edit the Sass,
      not this block. It carries only what paints behind the boot gate: tokens,
@@ -44,11 +70,11 @@
         <span class="switch__pill" aria-hidden="true"></span>
         <button class="switch__btn is-active" type="button" role="tab" id="tab-casino"
                 aria-selected="true" aria-controls="view-casino" data-view="casino">
-          <span aria-hidden="true">🎰</span> Casino
+          <span aria-hidden="true" data-casino-icon>🎰</span> <span data-casino-tab>Casino</span>
         </button>
         <button class="switch__btn" type="button" role="tab" id="tab-sports"
                 aria-selected="false" aria-controls="view-sports" data-view="sports">
-          <span aria-hidden="true">⚽</span> Sports
+          <span aria-hidden="true" data-sports-icon>⚽</span> <span data-sports-tab>Sports</span>
         </button>
       </div>
     </div>
@@ -122,7 +148,7 @@
               </button>
               <button class="pick" type="button" data-pick="draw" aria-pressed="false">
                 <span class="pick__tag" aria-hidden="true">X</span>
-                <span class="pick__name">Draw</span>
+                <span class="pick__name" data-draw-label>Draw</span>
                 <span class="pick__price" data-odds-draw hidden></span>
               </button>
               <button class="pick" type="button" data-pick="away" aria-pressed="false">
@@ -140,9 +166,7 @@
             </div>
             <input class="range" type="range" id="goalsRange" min="0.5" max="5.5" step="1" value="2.5"
                    aria-describedby="payoutBox">
-            <div class="slider__ticks" aria-hidden="true">
-              <span>0.5</span><span>1.5</span><span>2.5</span><span>3.5</span><span>4.5</span><span>5.5</span>
-            </div>
+            <div class="slider__ticks" id="goalsTicks" aria-hidden="true"></div>
           </div>
 
           <div class="calc" id="payoutBox" aria-live="polite">

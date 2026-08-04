@@ -4,6 +4,13 @@
     "mark": "VB",
     "tagline": "Play smart. 18+ only."
   },
+  "site": {
+    "url": "https://ufonaft12.github.io/examlanding/",
+    "description": "Two interactive welcome offers — pick a mystery vault or build a match prediction, and see your reward before you sign up. Demo build, 18+.",
+    "locale": "en_GB",
+    "image": "og.png",
+    "imageAlt": "VAULTBET welcome offer — pick a mystery vault or build a match prediction"
+  },
   "social": { "count": 1240, "label": "players claimed today" },
   "highlights": [
     "Your reward is revealed before you sign up — no email wall",
@@ -21,6 +28,8 @@
     }
   },
   "casino": {
+    "tab": "Casino",
+    "icon": "🎰",
     "eyebrow": "Casino · Mystery Vault Pick",
     "title": "Pick 1 of 3 Vaults",
     "subtitle": "One tap. One reward. Every vault is a winner.",
@@ -33,6 +42,8 @@
     ]
   },
   "sports": {
+    "tab": "Sports",
+    "icon": "⚽",
     "eyebrow": "Sports · Match Predictor",
     "title": "Build Your First Bet",
     "subtitle": "Slide to set the total goals line and watch your payout update live.",
@@ -43,6 +54,8 @@
       "name": "El Clásico",
       "kickoff": "Sat 21:00 CET · Santiago Bernabéu",
       "market": "Total Goals — Over",
+      "linePrefix": "Over",
+      "drawLabel": "Draw",
       "winnerMarket": "Match Winner",
       "pickHint": "Optional · tap to add a leg",
       "home": { "name": "Real Madrid", "short": "RMA", "form": "W W D W L", "color": "#eef2f9", "color2": "#c2cbdd" },

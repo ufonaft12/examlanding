@@ -44,6 +44,7 @@ class LandingApp {
       prizeDetail: $('#prizeDetail'),
       casinoCta:   $('#casinoCta'),
       range:       $('#goalsRange'),
+      ticks:       $('#goalsTicks'),
       matchRow:    $('#matchRow'),
       matchBox:    $('.match'),
       matchHead:   $('#matchHead'),
@@ -157,6 +158,12 @@ class LandingApp {
       });
     }
 
+    /* product switch — the tab is the product name, so it is campaign copy too */
+    set('[data-casino-tab]',  c.casino.tab || 'Casino');
+    set('[data-casino-icon]', c.casino.icon || '');
+    set('[data-sports-tab]',  c.sports.tab || 'Sports');
+    set('[data-sports-icon]', c.sports.icon || '');
+
     /* casino */
     set('[data-casino-eyebrow]', c.casino.eyebrow);
     set('[data-casino-title]',   c.casino.title);
@@ -183,6 +190,9 @@ class LandingApp {
     set('[data-away-name]',  m.away.name);
     set('[data-away-short]', m.away.short);
     set('[data-winner-market]', m.winnerMarket || 'Match Winner');
+    set('[data-draw-label]', m.drawLabel || 'Draw');
+    this.linePrefix = m.linePrefix || 'Over';
+    this.buildLines(s.oddsByLine);
 
     /* form as chips, and club colour on the crest — the two sides have to read
        as different entities, and no logo file ships with this build */
@@ -193,7 +203,7 @@ class LandingApp {
     const w = m.winnerOdds;
     this.winnerOdds = (w && PICKS.every((k) => typeof w[k] === 'number' && w[k] > 1)) ? w : null;
     if (this.winnerOdds) {
-      this.shorts = { home: m.home.short, draw: 'Draw', away: m.away.short };
+      this.shorts = { home: m.home.short, draw: m.drawLabel || 'Draw', away: m.away.short };
       const names = { home: m.home.name, draw: 'the draw', away: m.away.name };
       this.el.pickBtns.forEach((btn) => {
         const k = btn.dataset.pick;
@@ -215,6 +225,39 @@ class LandingApp {
 
     this.el.range.value = String(this.line);
     this.updateBet();
+  }
+
+  /* The goal lines are whatever oddsByLine prices, not six numbers typed into
+     the markup beside it. Re-price the market in config and the slider bounds,
+     the step and the tick labels all follow; leave it out and the range keeps
+     the bounds authored in the HTML. A range input can only step evenly, so a
+     non-uniform ladder falls back rather than lying about where it stops. */
+  buildLines(table) {
+    const lines = Object.keys(table || {})
+      .map(Number)
+      .filter((n) => !Number.isNaN(n))
+      .sort((a, b) => a - b);
+    if (lines.length < 2) return;
+
+    const step = +(lines[1] - lines[0]).toFixed(4);
+    const even = lines.every((v, i) => i === 0 || +(v - lines[i - 1]).toFixed(4) === step);
+    if (!even) return;
+
+    this.el.range.min = String(lines[0]);
+    this.el.range.max = String(lines[lines.length - 1]);
+    this.el.range.step = String(step);
+
+    /* keep the authored default if config still prices it, else start in the
+       middle of the ladder rather than at an edge */
+    if (!lines.includes(this.line)) this.line = lines[Math.floor(lines.length / 2)];
+
+    if (!this.el.ticks) return;
+    this.el.ticks.textContent = '';
+    lines.forEach((v) => {
+      const t = document.createElement('span');
+      t.textContent = v.toFixed(1);
+      this.el.ticks.appendChild(t);
+    });
   }
 
   /* Club identity from config: the colour drives the crest stripes only, never
@@ -552,7 +595,8 @@ class LandingApp {
     const leg    = this.pick && this.winnerOdds ? this.winnerOdds[this.pick] : 0;
     const odds   = leg ? Number((leg * over).toFixed(2)) : over;
     const label  = this.line.toFixed(1);
-    this.betLabel = (leg ? this.shorts[this.pick] + ' & ' : '') + 'Over ' + label;
+    const pre = this.linePrefix || 'Over';
+    this.betLabel = (leg ? this.shorts[this.pick] + ' & ' : '') + pre + ' ' + label;
     this.odds = odds;
     this.stake = stake;
 
@@ -562,7 +606,7 @@ class LandingApp {
 
     this.el.lineOut.textContent   = label;
     this.el.stakeOut.textContent  = money(stake);
-    this.el.oddsLabel.textContent = 'Over ' + label;
+    this.el.oddsLabel.textContent = pre + ' ' + label;
     this.el.oddsOut.textContent   = over.toFixed(2);   // the goals leg keeps its own price on screen
     this.el.payoutOut.textContent = money(stake * odds);
 
