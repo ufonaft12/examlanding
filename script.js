@@ -6,6 +6,8 @@ const SHAKE_MS   = 420;    // must match .vault.is-shaking keyframes
 const OPEN_MS    = 620;    // lid rotation + prize fade
 const BET_MS     = 800;    // button loading state before success box
 
+const PICKS = ['home', 'draw', 'away'];
+
 const wait  = (ms) => new Promise((res) => setTimeout(res, ms));
 const money = (n) => '$' + n.toFixed(2);
 const num   = (n) => Number(n).toLocaleString('en-US');
@@ -23,6 +25,8 @@ class LandingApp {
     this.vaultOpened = false;
     this.betLocked   = false;
     this.line        = 2.5;
+    this.pick        = null;    // optional 1X2 leg: 'home' | 'draw' | 'away'
+    this.winnerOdds  = null;
 
     /* ---- dom ---- */
     this.el = {
@@ -40,6 +44,13 @@ class LandingApp {
       prizeDetail: $('#prizeDetail'),
       casinoCta:   $('#casinoCta'),
       range:       $('#goalsRange'),
+      matchRow:    $('#matchRow'),
+      pickBtns:    $$('[data-pick]'),
+      winnerRow:   $('#winnerRow'),
+      winnerName:  $('#winnerName'),
+      winnerOddsOut:$('#winnerOddsOut'),
+      combinedRow: $('#combinedRow'),
+      combinedOut: $('#combinedOut'),
       lineOut:     $('#lineOut'),
       stakeOut:    $('#stakeOut'),
       oddsOut:     $('#oddsOut'),
@@ -154,6 +165,23 @@ class LandingApp {
     set('[data-away-name]',  m.away.name);
     set('[data-away-short]', m.away.short);
     set('[data-away-form]',  m.away.form);
+
+    /* optional match-winner leg — interactive only when config prices all three outcomes */
+    const w = m.winnerOdds;
+    this.winnerOdds = (w && PICKS.every((k) => typeof w[k] === 'number' && w[k] > 1)) ? w : null;
+    if (this.winnerOdds) {
+      this.shorts = { home: m.home.short, draw: 'Draw', away: m.away.short };
+      const names = { home: m.home.name, draw: 'the draw', away: m.away.name };
+      this.el.pickBtns.forEach((btn) => {
+        const k = btn.dataset.pick;
+        const cell = $('[data-odds-' + k + ']');
+        if (cell) { cell.textContent = this.winnerOdds[k].toFixed(2); cell.hidden = false; }
+        btn.setAttribute('aria-label', 'Add ' + names[k] + ' to win to your bet');
+      });
+    } else {
+      this.el.matchRow.classList.add('is-static');
+      this.el.pickBtns.forEach((btn) => { btn.disabled = true; btn.removeAttribute('aria-pressed'); });
+    }
     $('.btn__label', this.el.sportsCta).textContent = s.cta;
     this.el.successTitle.textContent = s.success.title;
     this.el.successCta.textContent   = s.success.cta;
@@ -201,6 +229,10 @@ class LandingApp {
     });
 
     this.el.sportsCta.addEventListener('click', () => this.lockBet());
+
+    this.el.pickBtns.forEach((btn) => {
+      btn.addEventListener('click', () => this.togglePick(btn.dataset.pick));
+    });
 
     [this.el.casinoCta, this.el.successCta].forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -307,6 +339,19 @@ class LandingApp {
   }
 
   /* ============ sports: predictor ============ */
+  /* tapping the active pick clears it — the winner leg is always optional */
+  togglePick(key) {
+    if (!this.winnerOdds || this.isAnimating) return;
+    this.pick = this.pick === key ? null : key;
+    this.el.pickBtns.forEach((btn) => {
+      const on = btn.dataset.pick === this.pick;
+      btn.classList.toggle('is-picked', on);
+      btn.setAttribute('aria-pressed', String(on));
+    });
+    this.el.matchRow.classList.toggle('has-pick', Boolean(this.pick));
+    this.updateBet(true);
+  }
+
   oddsFor(line) {
     const table = this.config.sports.oddsByLine || {};
     const key   = line.toFixed(1);
@@ -319,8 +364,11 @@ class LandingApp {
   updateBet(bump = false) {
     const s      = this.config.sports;
     const stake  = Number(s.stake) || 20;
-    const odds   = this.oddsFor(this.line);
+    const over   = this.oddsFor(this.line);
+    const leg    = this.pick && this.winnerOdds ? this.winnerOdds[this.pick] : 0;
+    const odds   = leg ? Number((leg * over).toFixed(2)) : over;
     const label  = this.line.toFixed(1);
+    this.betLabel = (leg ? this.shorts[this.pick] + ' & ' : '') + 'Over ' + label;
     this.odds = odds;
     this.stake = stake;
 
@@ -330,9 +378,22 @@ class LandingApp {
 
     this.el.lineOut.textContent   = label;
     this.el.stakeOut.textContent  = money(stake);
-    this.el.oddsOut.textContent   = odds.toFixed(2);
     this.el.oddsLabel.textContent = 'Over ' + label;
+    this.el.oddsOut.textContent   = over.toFixed(2);   // the goals leg keeps its own price on screen
     this.el.payoutOut.textContent = money(stake * odds);
+
+    /* winner + combined rows exist only while the optional leg is active, so the
+       player can verify winnerOdds × overOdds instead of trusting one number */
+    if (leg) {
+      this.el.winnerName.textContent    = this.shorts[this.pick];
+      this.el.winnerOddsOut.textContent = leg.toFixed(2);
+      this.el.combinedOut.textContent   = odds.toFixed(2);
+      this.el.winnerRow.hidden   = false;
+      this.el.combinedRow.hidden = false;
+    } else {
+      this.el.winnerRow.hidden   = true;
+      this.el.combinedRow.hidden = true;
+    }
 
     if (bump) {
       const n = this.el.payoutOut;
@@ -341,7 +402,7 @@ class LandingApp {
       n.classList.add('is-bumped');
     }
 
-    /* a locked bet is final — changing the line reopens the flow */
+    /* a locked bet is final — changing the line or the winner leg reopens the flow */
     if (this.betLocked) {
       this.betLocked = false;
       this.el.success.hidden = true;
@@ -369,7 +430,7 @@ class LandingApp {
     const tpl = this.config.sports.success.body || '';
     this.el.successBody.textContent = tpl.replace('{line}', this.line.toFixed(1));
     this.el.successSummary.textContent =
-      'Over ' + this.line.toFixed(1) + ' @ ' + this.odds.toFixed(2) +
+      this.betLabel + ' @ ' + this.odds.toFixed(2) +
       ' · ' + money(this.stake) + ' → ' + money(this.stake * this.odds);
     this.el.success.hidden = false;
 

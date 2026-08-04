@@ -80,18 +80,24 @@
 
           <div class="match">
             <p class="match__meta"><span data-comp></span> · <span data-kickoff></span></p>
-            <div class="match__row">
-              <div class="team">
+            <div class="match__row" id="matchRow">
+              <button class="team" type="button" data-pick="home" aria-pressed="false">
                 <span class="team__crest" data-home-short aria-hidden="true">RMA</span>
                 <span class="team__name" data-home-name>Real Madrid</span>
+                <span class="team__odds" data-odds-home hidden></span>
                 <span class="team__form" data-home-form></span>
-              </div>
-              <span class="match__vs" aria-hidden="true">VS</span>
-              <div class="team team--away">
+              </button>
+              <button class="pick-draw" type="button" data-pick="draw" aria-pressed="false">
+                <span class="pick-draw__vs" aria-hidden="true">VS</span>
+                <span class="pick-draw__label">Draw</span>
+                <span class="pick-draw__odds" data-odds-draw hidden></span>
+              </button>
+              <button class="team team--away" type="button" data-pick="away" aria-pressed="false">
                 <span class="team__crest" data-away-short aria-hidden="true">BAR</span>
                 <span class="team__name" data-away-name>Barcelona</span>
+                <span class="team__odds" data-odds-away hidden></span>
                 <span class="team__form" data-away-form></span>
-              </div>
+              </button>
             </div>
           </div>
 
@@ -109,7 +115,9 @@
 
           <div class="calc" id="payoutBox" aria-live="polite">
             <div class="calc__row"><span>Stake</span><strong id="stakeOut">$20.00</strong></div>
-            <div class="calc__row"><span>Odds <em id="oddsLabel">Over 2.5</em></span><strong id="oddsOut">1.85</strong></div>
+            <div class="calc__row" id="winnerRow" hidden><span>Winner <em id="winnerName">RMA</em></span><strong id="winnerOddsOut">2.10</strong></div>
+            <div class="calc__row"><span>Goals <em id="oddsLabel">Over 2.5</em></span><strong id="oddsOut">1.85</strong></div>
+            <div class="calc__row" id="combinedRow" hidden><span>Combined odds</span><strong id="combinedOut">3.89</strong></div>
             <div class="calc__row calc__row--total"><span>Potential Payout</span><strong id="payoutOut">$37.00</strong></div>
           </div>
 

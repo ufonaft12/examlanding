@@ -39,7 +39,8 @@
       "kickoff": "Sat 21:00 CET · Santiago Bernabéu",
       "market": "Total Goals — Over",
       "home": { "name": "Real Madrid", "short": "RMA", "form": "W W D W L" },
-      "away": { "name": "Barcelona", "short": "BAR", "form": "W W W D W" }
+      "away": { "name": "Barcelona", "short": "BAR", "form": "W W W D W" },
+      "winnerOdds": { "home": 2.10, "draw": 3.60, "away": 2.95 }
     },
     "stake": 20,
     "baseOdds": 1.85,
