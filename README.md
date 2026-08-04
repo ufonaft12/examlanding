@@ -73,7 +73,7 @@ Real Madrid vs Barcelona. Tap a team card or the Draw chip to add a **match-winn
 - **`config.json` is the single source of truth** — brand, both variant headlines, social proof, prizes, teams, odds, CTA labels and every fineprint string. There is deliberately **no bundled copy of the config in JS**: if the fetch fails the page shows an "Offers unavailable / Try again" state rather than silently serving stale duplicated data.
 - **Anti-abuse / edge cases** — a single `isAnimating` lock plus `pointer-events: none` on the vault grid, `disabled` + `aria-disabled` on unpicked vaults, `betLocked` state, and a busy button that cannot be re-fired. Rapid multi-tapping — on vaults, on team cards, on either CTA — produces exactly one reveal and one bet.
 - **A/B framework** — `?variant=B` (case-insensitive, anything else falls back to `A`) swaps the H1 and subline from config, sets `<html data-variant>` for CSS/analytics hooks, and labels the hero badge so QA can see which cell is live.
-- **Accessibility** — real `role="tablist"` product switch with `aria-selected`, `aria-pressed` toggle buttons for the 1X2 leg with descriptive `aria-label`s, `aria-live` on the reveal/payout/success regions, `<output>` for the slider value, 54px CTA targets, visible focus rings, `prefers-reduced-motion` guard that neutralises every animation.
+- **Accessibility** — real `role="tablist"` product switch with `aria-selected`, `aria-pressed` toggle buttons for the 1X2 leg with descriptive `aria-label`s, `aria-live` on the reveal/payout/success regions, `<output>` for the slider value, 54px CTA targets, visible focus rings, `prefers-reduced-motion` guard that neutralises every animation. The page is `inert` behind the loader so the boot gate cannot be tabbed through, focus moves to the next CTA when locking a bet disables the current one, and every muted tone clears WCAG AA 4.5:1 against the darkest and lightest surface it sits on — including the T&C fineprint, which is exactly the text a player is entitled to be able to read.
 
 ---
 
@@ -85,7 +85,22 @@ Real Madrid vs Barcelona. Tap a team card or the Draw chip to add a **match-winn
 - **CLS ≈ 0:** the reveal, success and optional calc rows are the only DOM state changes, all below the fold in normal flow; the slider fill is a CSS custom property, not a layout change.
 - **Zero third-party requests, no render-blocking JS.** Four same-origin files, `script.js` deferred. There is intentionally no `<link rel="preload">` for `config.json`: the mandated 1.5s boot gate already overlaps the fetch (`Promise.all`), and the `cache: 'no-store'` freshness policy defeats preload reuse anyway — a preload here would only add a duplicate request and an unused-preload warning.
 
-**Lighthouse.** The brief mandates a 1.5s spinner before the page is revealed, which pins LCP by design — the largest element cannot paint before `BOOT_DELAY` elapses. On a local `npx serve` run (Chrome, mobile emulation, simulated throttling) the page lands around **90–95 Performance with LCP ≈ 1.6s**; setting `BOOT_DELAY = 0` in `script.js` moves it to **99–100 with LCP ≈ 0.4s**. Accessibility / Best Practices / SEO are unaffected by the gate. Re-run on your own hardware before reading too much into the absolute numbers — the point is that *the only thing standing between this page and a perfect score is a deliberate, one-line-configurable delay.*
+**Lighthouse** — measured on the live GitHub Pages URL, Chrome DevTools, mobile emulation with simulated throttling:
+
+| Performance | Accessibility | Best Practices | SEO |
+| --- | --- | --- | --- |
+| **100** | **100** | **100** | **100** |
+
+| FCP | LCP | TBT | CLS | Speed Index |
+| --- | --- | --- | --- | --- |
+| 0.3 s | 0.3 s | 0 ms | 0 | 0.6 s |
+
+The mandated 1.5s gate does **not** cost LCP, which is the interesting part: the loader is itself a contentful paint, so the largest element renders at 0.3s and the simulated latency plays out behind an already-painted screen. Blocking on `Promise.all([fetch, wait(1500)])` rather than chaining the two is what keeps the config fetch inside that window instead of after it.
+
+Two audit hints are left deliberately unactioned:
+
+- **"Use efficient cache lifetimes" (10 KiB).** GitHub Pages serves everything with a fixed 10-minute `Cache-Control` and exposes no way to override it. A real deployment would ship content-hashed filenames behind a CDN with a one-year immutable TTL; that is a hosting property, not a code change.
+- **"Render-blocking requests: style.css".** 5 KiB over the wire, 0 ms of measured blocking. Inlining it would trade a cacheable stylesheet for bytes re-sent on every navigation, and the metric it would improve is already at its ceiling.
 
 ---
 
