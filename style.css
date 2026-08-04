@@ -38,9 +38,9 @@ body::before{content:"";position:fixed;inset:-30% -30% auto -30%;height:70vh;poi
 .logo__mark{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:linear-gradient(140deg,var(--gold),#ff9d00);color:#151006;font-weight:800;font-size:13px;letter-spacing:.02em;}
 .logo__word{font-weight:800;font-size:15px;letter-spacing:.16em}
 .switch{position:relative;display:flex;padding:4px;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:999px;}
-.switch__pill{position:absolute;top:4px;left:4px;width:calc(50% - 4px);height:calc(100% - 8px);border-radius:999px;background:var(--accent-dim);border:1px solid var(--accent);transform:translate3d(0,0,0);transition:transform .32s var(--ease), background-color .32s var(--ease), border-color .32s var(--ease);will-change:transform;}
-.switch[data-active="sports"] .switch__pill{transform:translate3d(100%,0,0)}
-.switch__btn{position:relative;z-index:1;padding:7px 13px;border-radius:999px;font-size:13px;font-weight:700;color:var(--ink-2);white-space:nowrap;transition:color .25s var(--ease);}
+.switch__pill{position:absolute;top:4px;left:4px;width:calc(50% - 5px);height:calc(100% - 8px);border-radius:999px;background:var(--accent-dim);border:1px solid var(--accent);transform:translate3d(0,0,0);transition:transform .32s var(--ease), background-color .32s var(--ease), border-color .32s var(--ease);will-change:transform;}
+.switch[data-active="sports"] .switch__pill{transform:translate3d(calc(100% + 2px),0,0)}
+.switch__btn{flex:1;position:relative;z-index:1;padding:7px 13px;border-radius:999px;font-size:13px;font-weight:700;color:var(--ink-2);white-space:nowrap;transition:color .25s var(--ease);}
 .switch__btn.is-active{color:var(--ink)}
 /* hero */
 .hero{padding:30px var(--pad) 20px;text-align:center}
@@ -156,8 +156,7 @@ body::before{content:"";position:fixed;inset:-30% -30% auto -30%;height:70vh;poi
 #combinedRow strong{color:var(--green)}
 .calc__row--total{margin-top:4px;padding-top:11px;border-top:1px dashed var(--line-strong);font-size:15px;font-weight:700;color:var(--ink);}
 .calc__row--total strong{font-size:24px;color:var(--green);letter-spacing:-.01em}
-.calc__row--total strong.is-bumped{animation:bump .3s var(--ease)}
-@keyframes bump{0%{transform:scale(1)}45%{transform:scale(1.09)}100%{transform:scale(1)}}
+/* the payout pop is driven by WAAPI in script.js — no keyframe restart, no forced layout */
 /* success */
 .success{margin-top:16px;padding:18px 16px;text-align:center;border:1px solid rgba(0,230,118,.34);border-radius:var(--r-md);background:linear-gradient(180deg,rgba(0,230,118,.11),rgba(0,230,118,.03));animation:slideDown .48s var(--ease) both;}
 .success__check{display:block;width:42px;height:42px;margin:0 auto 10px;border-radius:50%;background:var(--green);position:relative;animation:pop .45s var(--ease) both .1s;}

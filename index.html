@@ -17,7 +17,7 @@
   <span class="sr-only">Loading offers</span>
 </div>
 
-<div id="app" class="app" aria-busy="true">
+<div id="app" class="app" aria-busy="true" inert>
 
   <header class="site-header">
     <div class="wrap site-header__inner">
@@ -104,7 +104,7 @@
           <div class="slider">
             <div class="slider__head">
               <label class="slider__label" for="goalsRange" data-market>Total Goals — Over</label>
-              <output class="slider__value" id="lineOut" for="goalsRange">2.5</output>
+              <output class="slider__value" id="lineOut" for="goalsRange" aria-live="off">2.5</output>
             </div>
             <input class="range" type="range" id="goalsRange" min="0.5" max="5.5" step="1" value="2.5"
                    aria-describedby="payoutBox">

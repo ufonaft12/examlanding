@@ -8,10 +8,10 @@ Variant B of the A/B test: https://ufonaft12.github.io/examlanding/?variant=B
 
 ```
 config.json   all copy, offers, odds, teams, A/B headlines    2.3 KB
-index.html    semantic, accessible document                   7.4 KB
+index.html    semantic, accessible document                   7.5 KB
 style.css     dark iGaming theme + keyframes                 18.3 KB
-script.js     LandingApp class: state, A/B, interactions     15.7 KB
-                                        total ≈ 43 KB raw · ~13 KB gzipped
+script.js     LandingApp class: state, A/B, interactions     16.8 KB
+                                        total ≈ 45 KB raw · ~13 KB gzipped
 ```
 
 Run it locally over HTTP (the page fetches `config.json`, so `file://` won't work):
@@ -80,6 +80,7 @@ Real Madrid vs Barcelona. Tap a team card or the Draw chip to add a **match-winn
 ## Performance notes
 
 - **Animation budget:** only `transform` and `opacity` animate — the vault shake, the `rotateX` lid, the dimming, the spinner, the CTA pulse and the payout bump. No `width`/`top`/`box-shadow` transitions, so everything stays on the compositor at 60fps on mid-tier Android.
+- **No forced layout on the hot path.** Dragging the slider fires `input` on every pointer move; the payout pop is replayed through the Web Animations API rather than by toggling a class, because the class trick needs an `offsetWidth` read to flush the removal — a synchronous style+layout per frame.
 - **Idle cost:** the vaults' ambient breathing glow is switched off (`animation: none`) the moment a vault is opened, so a page left open after the reveal does no compositor work.
 - **CLS ≈ 0:** the reveal, success and optional calc rows are the only DOM state changes, all below the fold in normal flow; the slider fill is a CSS custom property, not a layout change.
 - **Zero third-party requests, no render-blocking JS.** Four same-origin files, `script.js` deferred. There is intentionally no `<link rel="preload">` for `config.json`: the mandated 1.5s boot gate already overlaps the fetch (`Promise.all`), and the `cache: 'no-store'` freshness policy defeats preload reuse anyway — a preload here would only add a duplicate request and an unused-preload warning.

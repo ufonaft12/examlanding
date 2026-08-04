@@ -70,16 +70,17 @@ class LandingApp {
     document.body.classList.add('is-locked');
     this.variant = this.readVariant();
 
+    /* one failure path for a missing config AND a malformed one — no bundled copy
+       to fall back on, so a hydrate error must not leave the loader spinning */
     try {
       const [config] = await Promise.all([this.loadConfig(), wait(BOOT_DELAY)]);
       this.config = config;
+      this.hydrate();
+      this.bind();
+      this.reveal();
     } catch (err) {
-      return this.fail(err);           // single source of truth: no bundled config copy
+      this.fail(err);
     }
-
-    this.hydrate();
-    this.bind();
-    this.reveal();
   }
 
   /* config is the only hard dependency — surface the failure instead of faking data */
@@ -108,6 +109,7 @@ class LandingApp {
     this.el.loader.classList.add('is-done');
     this.el.app.classList.add('is-ready');
     this.el.app.setAttribute('aria-busy', 'false');
+    this.el.app.inert = false;          // opacity:0 alone still leaves it tabbable
     document.body.classList.remove('is-locked');
     setTimeout(() => { this.el.loader.hidden = true; }, 420);
   }
@@ -121,10 +123,10 @@ class LandingApp {
     set('[data-brand-mark]', c.brand.mark);
     set('[data-brand-name]', c.brand.name);
     set('[data-brand-tagline]', c.brand.tagline);
-    document.title = c.brand.name + ' — ' + c.variants[this.variant].headline;
 
-    /* A/B headline */
+    /* A/B headline — resolve the variant before anything reads it */
     const v = c.variants[this.variant] || c.variants.A;
+    document.title = c.brand.name + ' — ' + v.headline;
     this.el.headline.textContent = v.headline;
     this.el.subline.textContent  = v.subline;
     set('[data-variant-label]', 'Variant ' + this.variant);
@@ -192,6 +194,9 @@ class LandingApp {
 
   /* one vault per configured prize — count is data-driven, not hard-coded */
   buildVaults(prizes) {
+    /* no prizes priced means nothing to reveal: hide the grid rather than ship
+       clickable vaults that would resolve to an undefined prize */
+    if (!prizes.length) { this.el.vaults.hidden = true; return; }
     const n = Math.max(2, prizes.length);
     this.el.vaults.style.setProperty('--cols', n);
     this.el.vaults.innerHTML = '';
@@ -318,7 +323,10 @@ class LandingApp {
         settle();
       }
     };
-    requestAnimationFrame((now) => { el.textContent = pre + '0' + post; tick(now); });
+    /* seed synchronously: if rAF is starved the guard still settles it, but the
+       placeholder must never survive into a painted frame */
+    el.textContent = pre + '0' + post;
+    requestAnimationFrame(tick);
   }
 
   /* prize art: config image when supplied, CSS coin otherwise */
@@ -395,12 +403,7 @@ class LandingApp {
       this.el.combinedRow.hidden = true;
     }
 
-    if (bump) {
-      const n = this.el.payoutOut;
-      n.classList.remove('is-bumped');
-      void n.offsetWidth;                                 // restart the keyframe
-      n.classList.add('is-bumped');
-    }
+    if (bump) this.bumpPayout();
 
     /* a locked bet is final — changing the line or the winner leg reopens the flow */
     if (this.betLocked) {
@@ -408,6 +411,19 @@ class LandingApp {
       this.el.success.hidden = true;
       this.el.sportsCta.disabled = false;
     }
+  }
+
+  /* Replaying a CSS keyframe by toggling a class needs an offsetWidth read to flush
+     the removal — a forced synchronous layout on every input event while dragging.
+     WAAPI restarts the same transform-only pop with no style/layout round-trip. */
+  bumpPayout() {
+    const el = this.el.payoutOut;
+    if (REDUCED || typeof el.animate !== 'function') return;
+    el.getAnimations().forEach((a) => a.cancel());
+    el.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(1.09)', offset: .45 }, { transform: 'scale(1)' }],
+      { duration: 300, easing: 'cubic-bezier(.2,.7,.2,1)' }
+    );
   }
 
   async lockBet() {
@@ -433,6 +449,8 @@ class LandingApp {
       this.betLabel + ' @ ' + this.odds.toFixed(2) +
       ' · ' + money(this.stake) + ' → ' + money(this.stake * this.odds);
     this.el.success.hidden = false;
+    /* disabling the CTA drops focus to <body>; hand it to the next step instead */
+    this.el.successCta.focus({ preventScroll: true });
 
     this.isAnimating = false;
   }
