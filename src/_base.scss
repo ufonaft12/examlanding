@@ -10,6 +10,13 @@
 *::before,
 *::after { box-sizing: border-box; }
 
+// Author rules out-rank the UA stylesheet whatever their specificity, so a
+// component that sets `display` silently defeats the hidden attribute. That is
+// not cosmetic here: it left the calculator showing a winner leg and a combined
+// price — placeholder numbers, contradicting the payout printed under them —
+// on a bet nobody had built yet.
+[hidden] { display: none !important; }
+
 html { -webkit-text-size-adjust: 100%; }
 
 body {
@@ -20,7 +27,10 @@ body {
   font-size: 16px;
   line-height: 1.45;
   -webkit-font-smoothing: antialiased;
+  // clip where supported: overflow:hidden turns the body into a scroll
+  // container, which quietly breaks position:sticky for its descendants
   overflow-x: hidden;
+  overflow-x: clip;
 
   // set while the boot gate is up, and again never — scroll belongs to the app
   &.is-locked { overflow: hidden; }

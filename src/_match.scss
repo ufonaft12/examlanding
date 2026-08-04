@@ -135,6 +135,23 @@
   }
 }
 
+// Pointer devices: show that the outcomes are pressable at all. Guarded on
+// :not(.is-static) so the degraded, unpriced state stays visibly inert.
+@media (hover: hover) {
+  .match__row:not(.is-static) .team:hover:not(.is-picked):not([disabled]),
+  .match__row:not(.is-static) .pick-draw:hover:not(.is-picked):not([disabled]) {
+    border-color: var(--line-strong);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  // once something is chosen the others are dimmed — lift them part-way back
+  // on hover so they still read as switchable
+  .match__row:not(.is-static).has-pick .team:hover:not(.is-picked),
+  .match__row:not(.is-static).has-pick .pick-draw:hover:not(.is-picked) {
+    opacity: 0.75;
+  }
+}
+
 // Dim the outcomes not chosen, so the selected one carries the row.
 .match__row.has-pick .team:not(.is-picked),
 .match__row.has-pick .pick-draw:not(.is-picked) { opacity: 0.42; }

@@ -140,6 +140,19 @@ class LandingApp {
       else proof.remove();
     }
 
+    /* supporting argument for the desktop layout, where the offer has a column
+       of its own — hidden on phones, where the job is to reach the mechanic */
+    const points = $('[data-highlights]');
+    if (points) {
+      const items = c.highlights || [];
+      if (!items.length) points.remove();
+      else items.forEach((text) => {
+        const li = document.createElement('li');
+        li.textContent = text;
+        points.appendChild(li);
+      });
+    }
+
     /* casino */
     set('[data-casino-eyebrow]', c.casino.eyebrow);
     set('[data-casino-title]',   c.casino.title);

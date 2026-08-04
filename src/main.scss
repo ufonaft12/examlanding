@@ -16,7 +16,7 @@
 @use "bet";
 
 // Above 640px the page stops being a phone column: more gutter, wider measure,
-// roomier cards. One breakpoint is all this layout needs.
+// roomier cards.
 @media (min-width: 640px) {
   :root { --pad: 24px; }
 
@@ -24,4 +24,153 @@
   .hero { padding-top: 44px; }
   .card { padding: 26px 24px 20px; }
   .vaults { gap: 14px; }
+}
+
+// Tablet: enough width to set the supporting points in two columns, which
+// stops them from stretching the page before the two-column layout kicks in.
+@media (min-width: 720px) {
+  .wrap { max-width: 680px; }
+
+  .hero {
+    &__title { font-size: 44px; }
+    &__sub { font-size: 16px; }
+
+    &__points {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 28px;
+      max-width: none;
+      margin-top: 26px;
+    }
+  }
+}
+
+// On a desktop the single column reads as a phone page dropped into an empty
+// screen, and the mechanic — which is the entire point — sits below the pitch
+// instead of beside it. Two columns: the offer argues on the left, the thing
+// you actually touch is on the right, above the fold and at full size.
+@media (min-width: 960px) {
+  // the casino card is short; without this the footer floats mid-screen with
+  // dead space under it
+  .app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .site-header__inner {
+    max-width: 1200px;
+    padding: 0 32px;
+  }
+
+  main {
+    flex: 1;
+    display: grid;
+    // the mechanic gets the larger share — it is what the page is for
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    align-items: start;
+    // centre the row in whatever height is left over, so a short casino card
+    // does not leave a dead band between itself and the footer. main can never
+    // be shorter than its content, so this cannot push anything out of reach.
+    align-content: center;
+    gap: 48px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 32px;
+  }
+
+  // Pinned while the card scrolls past it: the sports card is the tall one, and
+  // the offer should still be on screen when the player reaches the CTA.
+  // align-self keeps the item from stretching — a stretched grid item fills its
+  // track and has nothing left to stick within. This also depends on the body
+  // using overflow-x: clip rather than hidden, which would make it a scroll
+  // container and cancel sticky outright.
+  .hero {
+    grid-column: 1;
+    align-self: start;
+    position: sticky;
+    top: 84px;
+    max-width: none;
+    padding: 0;
+    text-align: left;
+
+    &__title { font-size: clamp(40px, 3.6vw, 54px); }
+    &__sub { font-size: 17px; max-width: 34ch; }
+    &__proof { margin: -2px 0 18px; }
+
+    &__points {
+      display: block;         // back to one column: the measure is narrower here
+      max-width: 40ch;
+      margin-top: 24px;
+    }
+  }
+
+  // both views occupy the same cell — only one is ever displayed
+  .view {
+    grid-column: 2;
+    grid-row: 1;
+    padding-bottom: 0;
+
+    // cap the card rather than let it stretch: a 600px-wide bet slip stops
+    // reading as one object
+    .wrap {
+      max-width: 520px;
+      margin-inline: auto;
+      padding: 0;
+    }
+  }
+
+  .vaults {
+    max-width: 430px;
+    margin-inline: auto;
+  }
+
+  // the footer becomes a rule across the foot of the page rather than a stack
+  .site-footer {
+    margin-top: 24px;
+    padding: 18px 0 26px;
+
+    .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      max-width: 1200px;
+      padding: 0 32px;
+    }
+
+    &__age { flex: none; }
+
+    &__legal {
+      margin: 0;
+      max-width: 62ch;
+      text-align: right;
+    }
+  }
+}
+
+// Laptops are wide but short. Claw back the vertical budget so the sports card
+// still clears the fold on a 768px-tall screen.
+@media (min-width: 960px) and (max-height: 820px) {
+  main {
+    gap: 40px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  .hero {
+    top: 68px;                    // shorter header offset on a short screen
+
+    &__title { font-size: 38px; }
+    &__points { margin-top: 18px; }
+    &__points li { margin-top: 10px; }
+  }
+}
+
+@media (min-width: 1360px) {
+  .site-header__inner,
+  main { max-width: 1280px; }
+
+  main { gap: 72px; }
 }
